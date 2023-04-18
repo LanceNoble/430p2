@@ -1,79 +1,51 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
-import { useEffect } from 'react';
 
 const root = document.querySelector('#content');
 let socket;
 
-
 function CredentialsPage() {
+    const errorBox = React.useRef(null);
+    async function post(e, url, code) {
+        e.preventDefault()
+        const user = e.target.querySelector('input[type="text"]').value;
+        const pass = e.target.querySelector('input[type="password"]').value;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user, pass })
+        });
+        res.status === code ? ReactDOM.render(<HubPage />, root) : errorBox.current.innerHTML = res.error;
+        return false
+    }
     return (
         <>
-            <h1>Login</h1>
-            <form id="loginForm"
-                name="loginForm"
-                onSubmit={async (e) => {
-                    e.preventDefault();
-                    const url = e.target.getAttribute('action');
-                    const httpMethod = e.target.getAttribute('method');
-                    const user = e.target.querySelector('#user').value;
-                    const pass = e.target.querySelector('#pass').value;
-                    const res = await fetch(url, {
-                        method: httpMethod,
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user, pass })
-                    });
-                    res.status === 200 ? ReactDOM.render(<HubPage />, root) : console.log("login failed");
-                    return false;
-                }}
-                action="/login"
-                method="POST"
-                className="mainForm">
-                <label htmlFor="user">Username: </label>
-                <input id="user" type="text" name="user" placeholder="username" />
-                <label htmlFor="pass">Password: </label>
-                <input id="pass" type="password" name="pass" placeholder="password" />
-                <input className="formSubmit" type="submit" value="Login" />
+            <h1>Credentials Page</h1>
+            <h2>Login</h2>
+            <form id="login" onSubmit={(e) => post(e, "/login", 204)}>
+                <input type="text" placeholder="Username" required/>
+                <input type="password" placeholder="Password" required/>
+                <input type="submit" value="Login" />
             </form>
-            <h1>Sign Up</h1>
-            <form id="signupForm"
-                name="signupForm"
-                onSubmit={async (e) => {
-                    e.preventDefault();
-                    const url = e.target.getAttribute('action');
-                    const httpMethod = e.target.getAttribute('method');
-                    const user = e.target.querySelector('#newUser').value;
-                    const pass = e.target.querySelector('#newPass').value;
-                    const pass2 = e.target.querySelector('#newPass2').value;
-                    if (pass !== pass2 || !user || !pass || !pass2) {
-                        console.log("signup failed");
-                    }
-                    else {
-                        const res = await fetch(url, {
-                            method: httpMethod,
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ user, pass })
-                        });
-                        res.status === 201 ? ReactDOM.render(<HubPage />, root) : console.log("signup failed");
-                    }
-                    return false;
-                }}
-                action="/signup"
-                method="POST"
-                className="mainForm">
-                <label htmlFor="newUser">Username: </label>
-                <input id="newUser" type="text" name="username" placeholder="username" />
-                <label htmlFor="newPass">Password: </label>
-                <input id="newPass" type="password" name="pass" placeholder="password" />
-                <label htmlFor="newPass2">Password: </label>
-                <input id="newPass2" type="password" name="pass2" placeholder="retype password" />
-                <input className="formSubmit" type="submit" value="Sign up" />
+            <h2>Sign Up</h2>
+            <form id="signup" onSubmit={(e) => {
+                const pass = e.target.querySelector("#pass").value
+                const passConfirm = e.target.querySelector("#passConfirm").value
+                pass === passConfirm ? post(e, "/signup", 201) : errorBox.current.innerHTML = "Passwords do not match"
+            }}>
+                <input type="text" placeholder="Username" required/>
+                <input id="pass" type="password" placeholder="Password" required/>
+                <input id="passConfirm" type="password" placeholder="Retype Password" required/>
+                <input type="submit" value="Sign Up" />
             </form>
+            <h2>Errors</h2>
+            <p ref={errorBox}></p>
         </>
     );
 }
 
 function HubPage() {
+    socket = io();
     return (
         <>
             <h1>Hub Page</h1>
@@ -81,10 +53,9 @@ function HubPage() {
             <h1>Join Room</h1>
             <form onSubmit={(e) => {
                 e.preventDefault();
-                socket = io();
                 const roomName = e.target.querySelector("#roomName").value;
                 //socket.emit('join room', roomName);
-                
+
                 ReactDOM.render(<GamePage />, root);
                 return false;
             }}>
@@ -182,10 +153,10 @@ function GamePage() {
             //https://stackoverflow.com/questions/26212792/convert-an-image-to-canvas-that-is-already-loaded
             let image = document.createElement('img');
             document.body.appendChild(image);
-            image.setAttribute('style','display:none');
-            image.setAttribute('alt','script div');
+            image.setAttribute('style', 'display:none');
+            image.setAttribute('alt', 'script div');
             image.setAttribute("src", drawing);
-            ctx.drawImage(image,0,0,image.width,image.height);
+            ctx.drawImage(image, 0, 0, image.width, image.height);
             document.body.removeChild(image);
         })
     });
@@ -197,7 +168,6 @@ function GamePage() {
 }
 
 window.onload = async () => {
-    const res = await fetch('/session', { method: 'HEAD' });
-    res.status === 200 ? ReactDOM.render(<HubPage />, root) : ReactDOM.render(<CredentialsPage />, root);
-
-};
+    const res = await fetch('/session', { method: 'HEAD' })
+    res.status === 204 ? ReactDOM.render(<HubPage />, root) : ReactDOM.render(<CredentialsPage/>, root)
+}

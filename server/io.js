@@ -9,7 +9,7 @@ const socketSetup = (app) => {
 
   io.on('connection', (socket) => {
     console.log('a user connected');
-    socket.join("room");
+    socket.join('room');
     socket.on('disconnect', () => {
       console.log('a user disconnected');
     });
@@ -23,7 +23,7 @@ const socketSetup = (app) => {
     });
 
     socket.on('drawing', (drawing) => {
-      io.to("room").emit('drawing', drawing);
+      io.to('room').emit('drawing', drawing);
     });
   });
 

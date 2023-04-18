@@ -1,9 +1,5 @@
-const path = require('path');
-
 module.exports = {
-    entry: {
-        app: './client/app.jsx'
-    },
+    entry: './client/client.jsx',
     module: {
         rules: [
             {
@@ -20,7 +16,7 @@ module.exports = {
         aggregateTimeout: 200,
     },
     output: {
-        path: path.resolve(__dirname, 'hosted'),
-        filename: '[name]bundle.js',
+        path: require('path').resolve(__dirname, 'hosted'),
+        filename: 'bundle.js',
     },
 };

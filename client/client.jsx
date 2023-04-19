@@ -59,11 +59,11 @@ function CredentialsPage() {
 function HubPage() {
     const roomList = React.useRef(null);
     React.useEffect(() => {
-        socket = io();
         socket.on('room create', (room) => {
 
         })
     })
+    socket = io();
     return (
         <>
             <h1>Hub Page</h1>
@@ -79,13 +79,13 @@ function HubPage() {
                 e.preventDefault();
                 const player = e.target.querySelector('select').value;
                 const room = e.target.querySelector('input[type="text"]').value;
-                await fetch('/session', { 
+                await fetch('/session', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ player, room }),
                 })
-                //socket.emit('room join', { roomName: roomName, type: });
-                //ReactDOM.render(<GamePage {room, player} />, root);
+                socket.emit('room join', room);
+                player === "2" ? ReactDOM.render(<JudgePage />, root) : ReactDOM.render(<DrawPage player={player} room={room} />, root)
                 return false;
             }}>
                 <input type="text" placeholder='Room Name' required></input>
@@ -105,10 +105,12 @@ function HubPage() {
     );
 }
 
-function DrawPage() {
+function DrawPage({ player, room }) {
     React.useEffect(() => {
+        console.log(room);
         // Reusing drawing code from pooxle project (with slight tweaks)
         const cvs = document.querySelector("canvas");
+        const ctx = cvs.getContext("2d");
         ctx.strokeStyle = "black";
         let radius = 5;
         let x;
@@ -132,7 +134,7 @@ function DrawPage() {
                 ctx.beginPath();
                 ctx.arc(x, y, radius, 0, 2 * Math.PI);
                 ctx.fill();
-                //socket.emit('drawing', { url: cvs.toDataURL("image/png"), room: });
+                socket.emit(`player ${player} drawing`, { roomName: room, url: cvs.toDataURL("image/png") });
             });
         });
         function mouseDone() {
@@ -141,40 +143,30 @@ function DrawPage() {
         cvs.addEventListener("mouseup", mouseDone);
         cvs.addEventListener("mouseleave", mouseDone);
     })
-    return <canvas width="500" height="500"></canvas>
+    return (
+        <>
+            <h1>Draw Page</h1>
+            <canvas width="500" height="500"></canvas>
+        </>
+    );
 }
 
 function JudgePage() {
     React.useEffect(() => {
-        socket.on('')
-    })
-    return <>
-        <img />
-        <img />
-    </>
-}
-
-function GamePage({ roomName }) {
-    React.useEffect(() => {
-        switch (getRandomInt(0, 3)) {
-
-        }
-        socket.on('drawing', (drawing) => {
-            //https://stackoverflow.com/questions/26212792/convert-an-image-to-canvas-that-is-already-loaded
-            let image = document.createElement('img');
-            document.body.appendChild(image);
-            image.setAttribute('style', 'display:none');
-            image.setAttribute('alt', 'script div');
-            image.setAttribute("src", drawing);
-            ctx.drawImage(image, 0, 0, image.width, image.height);
-            document.body.removeChild(image);
+        socket.on('player 0 drawing', (drawing) => {
+            document.querySelector("#p0").setAttribute("src", drawing);
         })
-    });
+        socket.on('player 1 drawing', (drawing) => {
+            document.querySelector("#p1").setAttribute("src", drawing);
+        })
+    })
     return (
         <>
-            <canvas width="500" height="500"></canvas>
+            <h1>Judge Page</h1>
+            <img id="p0" />
+            <img id="p1" />
         </>
-    );
+    )
 }
 
 window.onload = async () => {

@@ -4,8 +4,8 @@ const { Account } = models;
 
 const getSession = (req, res) => res.status(200).json(req.session.account);
 
-const headSession = (req, res) => req.session.account ? res.status(204).end()
-  : res.status(404).end()
+const headSession = (req, res) => (req.session.account ? res.status(204).end()
+  : res.status(404).end());
 
 const postSession = (req, res) => {
   const user = `${req.body.user}`;

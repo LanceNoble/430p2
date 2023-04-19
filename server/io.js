@@ -13,15 +13,22 @@ const socketSetup = (app) => {
       console.log('a user disconnected');
     });
 
-    socket.on('room join', (/* roomName */) => {
+    socket.on('room join', (room) => {
       // https://stackoverflow.com/questions/31468473/how-to-get-socket-io-number-of-clients-in-room
       // const roomSize = io.sockets.adapter.rooms.get(roomName).size;
       // roomSize === 3 ? io.emit('room full', { msg: `${roomName} is full!` })
       // : socket.join(roomName);
+      socket.join(room);
     });
 
-    socket.on('drawing', (drawing) => {
-      io.to('room').emit('drawing', drawing);
+    socket.on('player 0 drawing', (info) => {
+      console.log("player 0 is drawing somewhere!")
+      io.to(info.roomName).emit('player 0 drawing', info.url);
+    });
+
+    socket.on('player 1 drawing', (info) => {
+      console.log("player 1 is drawing somewhere!")
+      io.to(info.roomName).emit('player 1 drawing', info.url);
     });
   });
 

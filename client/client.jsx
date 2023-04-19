@@ -4,6 +4,11 @@ const ReactDOM = require('react-dom');
 const root = document.querySelector('#content');
 let socket;
 
+function NotFoundPage() {
+    return (<>
+    </>)
+}
+
 function CredentialsPage() {
     const errorBox = React.useRef(null);
     return (
@@ -134,7 +139,7 @@ function DrawPage({ player, room }) {
                 ctx.beginPath();
                 ctx.arc(x, y, radius, 0, 2 * Math.PI);
                 ctx.fill();
-                socket.emit(`player ${player} drawing`, { roomName: room, url: cvs.toDataURL("image/png") });
+                socket.emit(`player ${player} drawing`, { roomName: room, url: cvs.toDataURL("image/jpeg", 0.75) });
             });
         });
         function mouseDone() {
@@ -145,7 +150,7 @@ function DrawPage({ player, room }) {
     })
     return (
         <>
-            <h1>Draw Page</h1>
+            <h1>Player {player} Draw Page</h1>
             <canvas width="500" height="500"></canvas>
         </>
     );

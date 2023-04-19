@@ -42,7 +42,7 @@ redisClient.connect().then(() => {
     store: new RedisStore({
       client: redisClient,
     }),
-    secret: 'Draw Duels',
+    secret: 'DrawDuels',
     resave: false,
     saveUninitialized: false,
   }));

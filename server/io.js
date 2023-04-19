@@ -22,12 +22,10 @@ const socketSetup = (app) => {
     });
 
     socket.on('player 0 drawing', (info) => {
-      console.log("player 0 is drawing somewhere!")
       io.to(info.roomName).emit('player 0 drawing', info.url);
     });
 
     socket.on('player 1 drawing', (info) => {
-      console.log("player 1 is drawing somewhere!")
       io.to(info.roomName).emit('player 1 drawing', info.url);
     });
   });

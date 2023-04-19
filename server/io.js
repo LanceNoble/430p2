@@ -21,12 +21,8 @@ const socketSetup = (app) => {
       socket.join(room);
     });
 
-    socket.on('player 0 drawing', (info) => {
-      io.to(info.roomName).emit('player 0 drawing', info.url);
-    });
-
-    socket.on('player 1 drawing', (info) => {
-      io.to(info.roomName).emit('player 1 drawing', info.url);
+    socket.on('draw', (p) => {
+      io.to(p.room).emit('draw', { num: p.num, src: p.src });
     });
   });
 

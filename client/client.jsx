@@ -112,7 +112,6 @@ function HubPage() {
 
 function DrawPage({ player, room }) {
     React.useEffect(() => {
-        console.log(room);
         // Reusing drawing code from pooxle project (with slight tweaks)
         const cvs = document.querySelector("canvas");
         const ctx = cvs.getContext("2d");
@@ -139,7 +138,7 @@ function DrawPage({ player, room }) {
                 ctx.beginPath();
                 ctx.arc(x, y, radius, 0, 2 * Math.PI);
                 ctx.fill();
-                socket.emit(`player ${player} drawing`, { roomName: room, url: cvs.toDataURL("image/jpeg", 0.75) });
+                socket.emit(`draw`, {num: player, room: room, src: cvs.toDataURL() });
             });
         });
         function mouseDone() {
@@ -157,19 +156,16 @@ function DrawPage({ player, room }) {
 }
 
 function JudgePage() {
+    const p0 = React.useRef(null)
+    const p1 = React.useRef(null)
     React.useEffect(() => {
-        socket.on('player 0 drawing', (drawing) => {
-            document.querySelector("#p0").setAttribute("src", drawing);
-        })
-        socket.on('player 1 drawing', (drawing) => {
-            document.querySelector("#p1").setAttribute("src", drawing);
-        })
+        socket.on('draw', (p) => p.num === "0" ? p0.current.setAttribute("src", p.src) : p1.current.setAttribute("src", p.src))
     })
     return (
         <>
             <h1>Judge Page</h1>
-            <img id="p0" />
-            <img id="p1" />
+            <img id="p0" ref={p0}/>
+            <img id="p1" ref={p1}/>
         </>
     )
 }

@@ -2,16 +2,12 @@ const models = require('../models');
 
 const { Account } = models;
 
-const app = (req, res) => res.render('index');
+const getSession = (req, res) => res.status(200).json(req.session.account);
 
-const session = (req, res) => (req.session.account ? res.status(204).end() : res.status(404).end());
+const headSession = (req, res) => req.session.account ? res.status(204).end()
+  : res.status(404).end()
 
-const logout = (req, res) => {
-  req.session.destroy();
-  res.redirect('/');
-};
-
-const login = (req, res) => {
+const postSession = (req, res) => {
   const user = `${req.body.user}`;
   const pass = `${req.body.pass}`;
 
@@ -22,7 +18,20 @@ const login = (req, res) => {
   });
 };
 
-const signup = async (req, res) => {
+const deleteSession = (req, res) => {
+  req.session.destroy();
+  res.status(204).end();
+};
+
+const patchSession = (req, res) => {
+  const { player } = req.body;
+  const { room } = req.body;
+  if (player) req.session.account.player = player;
+  if (room) req.session.account.room = room;
+  res.status(204).end();
+};
+
+const postAccount = async (req, res) => {
   const user = `${req.body.user}`;
   const pass = `${req.body.pass}`;
 
@@ -40,10 +49,16 @@ const signup = async (req, res) => {
   }
 };
 
+const getPage = (req, res) => res.render('index');
+
 module.exports = {
-  app,
-  session,
-  logout,
-  login,
-  signup,
+  getSession,
+  headSession,
+  postSession,
+  deleteSession,
+  patchSession,
+
+  postAccount,
+
+  getPage,
 };

@@ -6,36 +6,48 @@ let socket;
 
 function CredentialsPage() {
     const errorBox = React.useRef(null);
-    async function post(e, url, code) {
-        e.preventDefault()
-        const user = e.target.querySelector('input[type="text"]').value;
-        const pass = e.target.querySelector('input[type="password"]').value;
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user, pass })
-        });
-        res.status === code ? ReactDOM.render(<HubPage />, root) : errorBox.current.innerHTML = res.error;
-        return false
-    }
     return (
         <>
             <h1>Credentials Page</h1>
             <h2>Login</h2>
-            <form id="login" onSubmit={(e) => post(e, "/login", 204)}>
-                <input type="text" placeholder="Username" required/>
-                <input type="password" placeholder="Password" required/>
+            <form onSubmit={async (e) => {
+                e.preventDefault();
+                const user = e.target.querySelector('input[type="text"]').value;
+                const pass = e.target.querySelector('input[type="password"]').value;
+                const res = await fetch('/session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user, pass }),
+                });
+                res.status === 204 ? ReactDOM.render(<HubPage />, root) : errorBox.current.innerHTML = res.error;
+                return false;
+            }}>
+                <input type="text" placeholder="Username" required />
+                <input type="password" placeholder="Password" required />
                 <input type="submit" value="Login" />
             </form>
             <h2>Sign Up</h2>
-            <form id="signup" onSubmit={(e) => {
+            <form onSubmit={async (e) => {
+                e.preventDefault();
                 const pass = e.target.querySelector("#pass").value
                 const passConfirm = e.target.querySelector("#passConfirm").value
-                pass === passConfirm ? post(e, "/signup", 201) : errorBox.current.innerHTML = "Passwords do not match"
+                if (pass === passConfirm) {
+                    const user = e.target.querySelector('input[type="text"]').value;
+                    const res = await fetch('/account', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user, pass }),
+                    })
+                    res.status === 201 ? ReactDOM.render(<HubPage />, root) : errorBox.current.innerHTML = res.error;
+                }
+                else {
+                    errorBox.current.innerHTML = "Passwords do not match"
+                }
+                return false;
             }}>
-                <input type="text" placeholder="Username" required/>
-                <input id="pass" type="password" placeholder="Password" required/>
-                <input id="passConfirm" type="password" placeholder="Retype Password" required/>
+                <input type="text" placeholder="Username" required />
+                <input id="pass" type="password" placeholder="Password" required />
+                <input id="passConfirm" type="password" placeholder="Retype Password" required />
                 <input type="submit" value="Sign Up" />
             </form>
             <h2>Errors</h2>
@@ -45,82 +57,62 @@ function CredentialsPage() {
 }
 
 function HubPage() {
-    socket = io();
+    const roomList = React.useRef(null);
+    React.useEffect(() => {
+        socket = io();
+        socket.on('room create', (room) => {
+
+        })
+    })
     return (
         <>
             <h1>Hub Page</h1>
-            <a href="/logout">Logout</a>
-            <h1>Join Room</h1>
-            <form onSubmit={(e) => {
+            <button onClick={async (e) => {
                 e.preventDefault();
-                const roomName = e.target.querySelector("#roomName").value;
-                //socket.emit('join room', roomName);
-
-                ReactDOM.render(<GamePage />, root);
+                await fetch('/session', { method: 'DELETE' })
+                ReactDOM.render(<CredentialsPage />, root)
+                return false;
+            }} type="button">Logout</button>
+            <h2>Join Room</h2>
+            <p>If the room doesn't exist, it will be created for you.</p>
+            <form id="roomForm" onSubmit={async (e) => {
+                e.preventDefault();
+                const player = e.target.querySelector('select').value;
+                const room = e.target.querySelector('input[type="text"]').value;
+                await fetch('/session', { 
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ player, room }),
+                })
+                //socket.emit('room join', { roomName: roomName, type: });
+                //ReactDOM.render(<GamePage {room, player} />, root);
                 return false;
             }}>
-                <label htmlFor="roomName">Room Name: </label>
-                <input id="roomName" type="text"></input>
+                <input type="text" placeholder='Room Name' required></input>
+                <select>
+                    <option value="0" selected="selected">Drawer 1</option>
+                    <option value="1">Drawer 2</option>
+                    <option value="2">Judge</option>
+                </select>
                 <input type="submit" value="Join Room"></input>
             </form>
-            <h1>Create Room</h1>
-            <form onSubmit={(e) => {
-                /*socket = io();
-                const roomName = e.target.querySelector("#roomName").value;
-                socket.emit('create room', roomName);
-                return false;*/
-            }}>
-                <label htmlFor="newRoomName">New Room Name: </label>
-                <input id="newRoomName" type="text"></input>
-                <input type="submit" value="Create Room"></input>
-            </form>
+            <h2>Rooms</h2>
+            <ul ref={roomList}>
+
+            </ul>
+            <h2>Errors</h2>
         </>
     );
 }
 
-function GamePage() {
-    //https://daveceddia.com/react-hook-after-render/
-    useEffect(() => {
-        /* //https://stackoverflow.com/questions/26212792/convert-an-image-to-canvas-that-is-already-loaded
-         let image = document.createElement('img');
-         document.body.appendChild(image);
-         image.setAttribute('style','display:none');
-         image.setAttribute('alt','script div');
-         image.setAttribute("src", drawing);
-         ctx.drawImage(image,0,0,image.width,image.height);
-         document.body.removeChild(image);
-        socket.emit('drawing', image);*/
-        // Setup canvas
+function DrawPage() {
+    React.useEffect(() => {
+        // Reusing drawing code from pooxle project (with slight tweaks)
         const cvs = document.querySelector("canvas");
-        // Please try making the pixel size a proper divisor of the canvas
-        const pixelSize = 20;
-        const ctx = cvs.getContext("2d");
-        ctx.fillStyle = "black";
         ctx.strokeStyle = "black";
-        ctx.lineWidth = 0.125;
-        // Make grid lines so user can anticipate where their pixel is being placed
-        for (let i = 0; i < cvs.height / pixelSize; i++) {
-            ctx.beginPath();
-            ctx.moveTo(0, i * pixelSize);
-            ctx.lineTo(cvs.width, i * pixelSize);
-            ctx.closePath();
-            ctx.stroke();
-        }
-        for (let i = 0; i < cvs.width / pixelSize; i++) {
-            ctx.beginPath();
-            ctx.moveTo(i * pixelSize, 0);
-            ctx.lineTo(i * pixelSize, cvs.height);
-            ctx.closePath();
-            ctx.stroke();
-        }
-        // BORROWED CODE
-        // workaround for events only firing once
-        // simulates them firing multiple times
-        // let's user continuously draw while holding down mouse button
-        // instead of having to click everytime to place a pixel
-        // https://stackoverflow.com/questions/41304737/why-onmousedown-event-occur-once-how-to-handle-mouse-hold-event
-        let pixelX;
-        let pixelY;
+        let radius = 5;
+        let x;
+        let y;
         let timer;
         cvs.addEventListener("mousemove", (e) => {
             // put canvas coords in global space
@@ -132,15 +124,15 @@ function GamePage() {
             // put mouse coords relative to canvas space
             const cvsMouseX = e.pageX - canXAbs;
             const cvsMouseY = e.pageY - canYAbs;
-            // Math.trunc ensures that pixel doesn't take up multiple gridboxes 
-            // especially in the event of a pixel size that is not a proper divisor of the canvas dimensions
-            pixelX = pixelSize * Math.trunc(cvsMouseX / pixelSize);
-            pixelY = pixelSize * Math.trunc(cvsMouseY / pixelSize);
+            x = cvsMouseX;
+            y = cvsMouseY;
         });
         cvs.addEventListener("mousedown", () => {
             timer = setInterval(() => {
-                ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);
-                socket.emit('drawing', cvs.toDataURL("image/png"));
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                ctx.fill();
+                //socket.emit('drawing', { url: cvs.toDataURL("image/png"), room: });
             });
         });
         function mouseDone() {
@@ -148,7 +140,25 @@ function GamePage() {
         }
         cvs.addEventListener("mouseup", mouseDone);
         cvs.addEventListener("mouseleave", mouseDone);
-        // END OF BORROWED CODE
+    })
+    return <canvas width="500" height="500"></canvas>
+}
+
+function JudgePage() {
+    React.useEffect(() => {
+        socket.on('')
+    })
+    return <>
+        <img />
+        <img />
+    </>
+}
+
+function GamePage({ roomName }) {
+    React.useEffect(() => {
+        switch (getRandomInt(0, 3)) {
+
+        }
         socket.on('drawing', (drawing) => {
             //https://stackoverflow.com/questions/26212792/convert-an-image-to-canvas-that-is-already-loaded
             let image = document.createElement('img');
@@ -169,5 +179,5 @@ function GamePage() {
 
 window.onload = async () => {
     const res = await fetch('/session', { method: 'HEAD' })
-    res.status === 204 ? ReactDOM.render(<HubPage />, root) : ReactDOM.render(<CredentialsPage/>, root)
+    res.status === 204 ? ReactDOM.render(<HubPage />, root) : ReactDOM.render(<CredentialsPage />, root)
 }

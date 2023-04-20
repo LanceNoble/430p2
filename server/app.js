@@ -1,36 +1,53 @@
 require('dotenv').config();
 
+// Library for easily interacting with MongoDB via Node.js
 const mongoose = require('mongoose');
 
+// Session cookie database
 const RedisStore = require('connect-redis').default;
 const redis = require('redis');
 
+// Web framework
 const express = require('express');
-const session = require('express-session');
+
+// Web framework template engine
 const expressHandlebars = require('express-handlebars');
 
+// Web framework middleware
 const path = require('path');
 const compression = require('compression');
 const favicon = require('serve-favicon');
-const bodyParser = require('body-parser');
 const helmet = require('helmet');
+const session = require('express-session');
 
-const router = require('./router.js');
-const socketSetup = require('./io.js');
+// Socket
+const http = require('http');
+const { Server } = require('socket.io');
 
+// Controllers
+const accountController = require('./controllers/Account.js');
+const generalController = require('./controllers/General.js');
+
+// Connect to databases
 mongoose.connect(process.env.MONGODB_URI).catch((err) => { if (err) throw err; });
 const redisClient = redis.createClient({ url: process.env.REDISCLOUD_URL });
 
 redisClient.connect().then(() => {
   const app = express();
 
+  app.use((req, res, next) => {
+    if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] !== 'https') {
+      res.redirect(`https://${req.hostname}${req.url}`);
+    }
+    next();
+  });
   app.use(helmet());
   app.use('/assets', express.static(path.resolve(`${__dirname}/../hosted/`)));
   // https://favicon.io
   app.use(favicon(`${__dirname}/../hosted/img/favicon.png`));
   app.use(compression());
-  app.use(bodyParser.urlencoded({ extended: true }));
-  app.use(bodyParser.json());
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
 
   app.use(session({
     key: 'sessionid',
@@ -46,9 +63,47 @@ redisClient.connect().then(() => {
   app.set('view engine', 'handlebars');
   app.set('views', `${__dirname}/../views`);
 
-  router(app);
+  app.head('/session', accountController.headSession);
+  app.get('/session', accountController.getSession);
+  app.post('/session', accountController.postSession);
+  app.delete('/session', accountController.deleteSession);
+  app.patch('/session', accountController.patchSession);
 
-  const server = socketSetup(app);
+  app.post('/account', accountController.postAccount);
+
+  app.get('/', generalController.getIndex);
+  app.get('/*', generalController.getNotFound);
+
+  const server = http.createServer(app);
+  const io = new Server(server);
+
+  io.on('connection', (socket) => {
+    // console.log('a user connected');
+    socket.on('disconnect', () => {
+      // console.log('a user disconnected');
+    });
+
+    socket.on('room join', (room) => {
+      // https://stackoverflow.com/questions/31468473/how-to-get-socket-io-number-of-clients-in-room
+      // const roomSize = io.sockets.adapter.rooms.get(roomName).size;
+      // roomSize === 3 ? io.emit('room full', { msg: `${roomName} is full!` })
+      // : socket.join(roomName);
+      socket.join(room);
+    });
+
+    socket.on('draw', (p) => {
+      io.to(p.room).emit('draw', { num: p.num, src: p.src });
+    });
+  });
+
+  /* io.of('/').adapter.on('create-room', (room) => {
+    console.log(`room ${room} was created`);
+    io.emit('room create', room);
+  });
+
+  io.of('/').adapter.on('join-room', (room, id) => {
+    console.log(`socket ${id} has joined room ${room}`);
+  }); */
 
   server.listen(3000, (err) => {
     if (err) throw err;

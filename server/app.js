@@ -16,14 +16,9 @@ const bodyParser = require('body-parser');
 const helmet = require('helmet');
 
 const router = require('./router.js');
-
 const socketSetup = require('./io.js');
 
-const port = process.env.PORT || process.env.NODE_PORT || 3000;
-const dbURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1/DrawDuels';
-
-mongoose.connect(dbURI).catch((err) => { if (err) throw err; });
-
+mongoose.connect(process.env.MONGODB_URI).catch((err) => { if (err) throw err; });
 const redisClient = redis.createClient({ url: process.env.REDISCLOUD_URL });
 
 redisClient.connect().then(() => {
@@ -55,7 +50,7 @@ redisClient.connect().then(() => {
 
   const server = socketSetup(app);
 
-  server.listen(port, (err) => {
-    if (err) { throw err; }
+  server.listen(3000, (err) => {
+    if (err) throw err;
   });
 });

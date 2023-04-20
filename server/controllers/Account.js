@@ -1,6 +1,4 @@
-const models = require('../models');
-
-const { Account } = models;
+const AccountModel = require('../models/Account.js');
 
 const getSession = (req, res) => res.status(200).json(req.session.account);
 
@@ -11,9 +9,9 @@ const postSession = (req, res) => {
   const user = `${req.body.user}`;
   const pass = `${req.body.pass}`;
 
-  return Account.authenticate(user, pass, (err, account) => {
+  return AccountModel.authenticate(user, pass, (err, account) => {
     if (err || !account) return res.status(401).json({ error: 'Wrong credentials' });
-    req.session.account = Account.toAPI(account);
+    req.session.account = AccountModel.toAPI(account);
     return res.status(204).end();
   });
 };
@@ -36,10 +34,10 @@ const postAccount = async (req, res) => {
   const pass = `${req.body.pass}`;
 
   try {
-    const hash = await Account.generateHash(pass);
-    const newAccount = new Account({ username: user, password: hash, wins: 0 });
+    const hash = await AccountModel.generateHash(pass);
+    const newAccount = new AccountModel({ username: user, password: hash, wins: 0 });
     await newAccount.save();
-    req.session.account = Account.toAPI(newAccount);
+    req.session.account = AccountModel.toAPI(newAccount);
     return res.status(201).end();
   } catch (err) {
     if (err.code === 11000) {

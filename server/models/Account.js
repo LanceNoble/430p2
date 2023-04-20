@@ -3,8 +3,6 @@ const mongoose = require('mongoose');
 
 const saltRounds = 10;
 
-let AccountModel = {};
-
 const AccountSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -22,6 +20,8 @@ const AccountSchema = new mongoose.Schema({
     required: true,
   },
 });
+
+const AccountModel = mongoose.model('Account', AccountSchema);
 
 AccountSchema.statics.toAPI = (doc) => ({
   username: doc.username,
@@ -49,5 +49,4 @@ AccountSchema.statics.authenticate = async (username, password, callback) => {
   }
 };
 
-AccountModel = mongoose.model('Account', AccountSchema);
-module.exports = AccountModel;
+module.exports = { AccountModel };

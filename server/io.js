@@ -8,9 +8,9 @@ const socketSetup = (app) => {
   io = new Server(server);
 
   io.on('connection', (socket) => {
-    console.log('a user connected');
+    // console.log('a user connected');
     socket.on('disconnect', () => {
-      console.log('a user disconnected');
+      // console.log('a user disconnected');
     });
 
     socket.on('room join', (room) => {
@@ -26,14 +26,14 @@ const socketSetup = (app) => {
     });
   });
 
-  io.of('/').adapter.on('create-room', (room) => {
+  /* io.of('/').adapter.on('create-room', (room) => {
     console.log(`room ${room} was created`);
     io.emit('room create', room);
   });
 
   io.of('/').adapter.on('join-room', (room, id) => {
     console.log(`socket ${id} has joined room ${room}`);
-  });
+  }); */
 
   return server;
 };

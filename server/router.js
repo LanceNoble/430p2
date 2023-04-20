@@ -4,11 +4,11 @@ const accountController = require('./controllers/Account.js');
 // const mid = require('./middleware');
 
 const router = (app) => {
-  app.head('/session', generalController.headSession);
-  app.get('/session', generalController.getSession);
-  app.post('/session', generalController.postSession);
-  app.delete('/session', generalController.deleteSession);
-  app.patch('/session', generalController.patchSession);
+  app.head('/session', accountController.headSession);
+  app.get('/session', accountController.getSession);
+  app.post('/session', accountController.postSession);
+  app.delete('/session', accountController.deleteSession);
+  app.patch('/session', accountController.patchSession);
 
   app.post('/account', accountController.postAccount);
 

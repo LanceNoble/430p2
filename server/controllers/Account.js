@@ -49,16 +49,12 @@ const postAccount = async (req, res) => {
   }
 };
 
-const getPage = (req, res) => res.render('index');
-
 module.exports = {
+  postAccount,
+
   getSession,
   headSession,
   postSession,
   deleteSession,
   patchSession,
-
-  postAccount,
-
-  getPage,
 };

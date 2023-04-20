@@ -1,16 +1,19 @@
-const controllers = require('./controllers');
+const generalController = require('./controllers/General.js');
+const accountController = require('./controllers/Account.js');
 
 // const mid = require('./middleware');
 
 const router = (app) => {
-  app.head('/session', controllers.Account.headSession);
-  app.get('/session', controllers.Account.getSession);
-  app.post('/session', controllers.Account.postSession);
-  app.delete('/session', controllers.Account.deleteSession);
-  app.patch('/session', controllers.Account.patchSession);
+  app.head('/session', generalController.headSession);
+  app.get('/session', generalController.getSession);
+  app.post('/session', generalController.postSession);
+  app.delete('/session', generalController.deleteSession);
+  app.patch('/session', generalController.patchSession);
 
-  app.post('/account', controllers.Account.postAccount);
-  app.get('/', controllers.Account.getPage);
+  app.post('/account', accountController.postAccount);
+
+  app.get('/', generalController.getIndex);
+  app.get('/*', generalController.getNotFound);
 };
 
 module.exports = router;

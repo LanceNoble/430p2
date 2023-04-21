@@ -22,8 +22,8 @@ const deleteSession = (req, res) => {
 };
 
 const patchSession = (req, res) => {
-  const room  = req.body.room;
-  const player = req.body.player;
+  const { room } = req.body;
+  const { player } = req.body;
   req.session.account.room = room;
   req.session.account.player = player;
   res.status(204).end();

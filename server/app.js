@@ -36,12 +36,12 @@ redisClient.connect().then(() => {
   const app = express();
 
   // Setup global middleware
-  app.use((req, res, next) => {
+  /*app.use((req, res, next) => {
     if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] !== 'https') {
       res.redirect(`https://${req.hostname}${req.url}`);
     }
     next();
-  });
+  });*/
   app.use(helmet());
   app.use('/assets', express.static(path.resolve(`${__dirname}/../hosted/`)));
   // https://favicon.io
@@ -96,10 +96,10 @@ redisClient.connect().then(() => {
 
     socket.on('room leave', (room) => {
       socket.leave(room);
-    })
+    });
 
     socket.on('draw', (p) => {
-      //console.log(`someone is drawing in room ${p.room}`)
+      // console.log(`someone is drawing in room ${p.room}`)
       io.to(p.room).emit('draw', { num: p.num, src: p.src });
     });
   });

@@ -11,6 +11,14 @@ export default function Draw({ gameContext, setPage }) {
         let x;
         let y;
         let timer;
+        let req;
+        function paint() {
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+            ctx.fill();
+            game.socket.emit('draw', { room: game.room, num: game.player, src: cvs.toDataURL() });
+            req = window.requestAnimationFrame(paint);
+        }
         cvs.addEventListener("mousemove", (e) => {
             // put canvas coords in global space
             const cvsPos = cvs.getBoundingClientRect();
@@ -25,15 +33,17 @@ export default function Draw({ gameContext, setPage }) {
             y = cvsMouseY;
         });
         cvs.addEventListener("mousedown", () => {
-            timer = setInterval(() => {
+            req = window.requestAnimationFrame(paint);
+            /*timer = setInterval(() => {
                 ctx.beginPath();
                 ctx.arc(x, y, radius, 0, 2 * Math.PI);
                 ctx.fill();
                 game.socket.emit('draw', { room: game.room, num: game.player, src: cvs.toDataURL() });
-            });
+            });*/
         });
         function mouseDone() {
-            clearInterval(timer);
+            //clearInterval(timer);
+            window.cancelAnimationFrame(req);
         }
         cvs.addEventListener("mouseup", mouseDone);
         cvs.addEventListener("mouseleave", mouseDone);
@@ -48,7 +58,7 @@ export default function Draw({ gameContext, setPage }) {
                 await fetch('/session', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ room: "", player: "-1"}),
+                    body: JSON.stringify({ room: "", player: "-1" }),
                 });
                 setPage("hub");
                 return false;

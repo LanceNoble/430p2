@@ -65,7 +65,6 @@ redisClient.connect().then(() => {
   app.set('views', `${__dirname}/../views`);
 
   // Setup routes
-  app.head('/session', accountController.headSession);
   app.get('/session', accountController.getSession);
   app.post('/session', accountController.postSession);
   app.delete('/session', accountController.deleteSession);
@@ -99,7 +98,6 @@ redisClient.connect().then(() => {
     });
 
     socket.on('draw', (p) => {
-      // console.log(`someone is drawing in room ${p.room}`)
       io.to(p.room).emit('draw', { num: p.num, src: p.src });
     });
   });

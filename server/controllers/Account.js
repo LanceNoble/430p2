@@ -2,9 +2,6 @@ const { AccountModel } = require('../models/Account.js');
 
 const getSession = (req, res) => (req.session.account ? res.status(200).json(req.session.account) : res.status(404).json({ error: 'session cookie not found' }));
 
-const headSession = (req, res) => (req.session.account ? res.status(204).end()
-  : res.status(404).end());
-
 const postSession = (req, res) => {
   const user = `${req.body.user}`;
   const pass = `${req.body.pass}`;
@@ -51,7 +48,6 @@ module.exports = {
   postAccount,
 
   getSession,
-  headSession,
   postSession,
   deleteSession,
   patchSession,

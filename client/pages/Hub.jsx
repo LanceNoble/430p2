@@ -23,6 +23,7 @@ export default function Hub({ setPage, setGameContextValue }) {
                     body: JSON.stringify({ room, player }),
                 })
                 setGameContextValue({ room, player, socket });
+                socket.emit('room join', room);
                 player === "2" ? setPage("judge") : setPage("draw")
                 return false;
             }}>

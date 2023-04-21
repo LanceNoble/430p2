@@ -1,6 +1,6 @@
 const React = require('react');
 
-export default function Draw({ gameContext }) {
+export default function Draw({ gameContext, setPage }) {
     const game = React.useContext(gameContext);
     React.useEffect(() => {
         // Reusing drawing code from pooxle project (with slight tweaks)
@@ -29,7 +29,7 @@ export default function Draw({ gameContext }) {
                 ctx.beginPath();
                 ctx.arc(x, y, radius, 0, 2 * Math.PI);
                 ctx.fill();
-                game.socket.emit(`draw`, { room: game.room, num: game.player, src: cvs.toDataURL() });
+                game.socket.emit('draw', { room: game.room, num: game.player, src: cvs.toDataURL() });
             });
         });
         function mouseDone() {
@@ -40,8 +40,19 @@ export default function Draw({ gameContext }) {
     })
     return (
         <>
-            <h1>Player {game.player} Draw Page</h1>
+            <h1>You are Drawer {game.player} in Room "{game.room}"</h1>
             <canvas width="500" height="500"></canvas>
+            <button onClick={async (e) => {
+                e.preventDefault();
+                game.socket.emit('room leave', game.room);
+                await fetch('/session', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ room: "", player: "-1"}),
+                });
+                setPage("hub");
+                return false;
+            }} type="button">Leave Game</button>
         </>
     );
 }

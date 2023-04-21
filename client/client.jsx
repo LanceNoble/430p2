@@ -21,8 +21,8 @@ function Index({ init, room = "", player = -1, socket }) {
     switch (page) {
         case "creds": return (<Credentials setPage={setPage} />);
         case "hub": return (<Hub setPage={setPage} setGameContextValue={setGameContextValue} />);
-        case "draw": return (<gameContext.Provider value={gameContext}><Draw setPage={setPage} gameContext={gameContext} /></gameContext.Provider>);
-        case "judge": return (<gameContext.Provider value={gameContext}><Judge setPage={setPage} gameContext={gameContext} /></gameContext.Provider>);
+        case "draw": return (<gameContext.Provider value={gameContextValue}><Draw setPage={setPage} gameContext={gameContext} /></gameContext.Provider>);
+        case "judge": return (<gameContext.Provider value={gameContextValue}><Judge setPage={setPage} gameContext={gameContext} /></gameContext.Provider>);
         default: return (<NotFound setPage={setPage} />);
     }
 }
@@ -37,7 +37,7 @@ window.onload = async () => {
         const sessionCookie = await res.json();
         const room = sessionCookie.room;
         const player = sessionCookie.player;
-        if (room) {
+        if (room !== "") {
             if (player !== "2") {
                 root.render(<Index init={"draw"} room={room} player={player} socket={socket} />)
             }

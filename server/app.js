@@ -94,7 +94,12 @@ redisClient.connect().then(() => {
       socket.join(room);
     });
 
+    socket.on('room leave', (room) => {
+      socket.leave(room);
+    })
+
     socket.on('draw', (p) => {
+      //console.log(`someone is drawing in room ${p.room}`)
       io.to(p.room).emit('draw', { num: p.num, src: p.src });
     });
   });

@@ -31,10 +31,11 @@ const generalController = require('./controllers/General.js');
 // Connect to databases
 mongoose.connect(process.env.MONGODB_URI).catch((err) => { if (err) throw err; });
 const redisClient = redis.createClient({ url: process.env.REDISCLOUD_URL });
-
 redisClient.connect().then(() => {
+  // Create express app
   const app = express();
 
+  // Setup global middleware
   app.use((req, res, next) => {
     if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] !== 'https') {
       res.redirect(`https://${req.hostname}${req.url}`);
@@ -48,7 +49,6 @@ redisClient.connect().then(() => {
   app.use(compression());
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
-
   app.use(session({
     key: 'sessionid',
     store: new RedisStore({
@@ -59,10 +59,12 @@ redisClient.connect().then(() => {
     saveUninitialized: false,
   }));
 
+  // Setup template engine
   app.engine('handlebars', expressHandlebars.engine({ defaultLayout: '' }));
   app.set('view engine', 'handlebars');
   app.set('views', `${__dirname}/../views`);
 
+  // Setup routes
   app.head('/session', accountController.headSession);
   app.get('/session', accountController.getSession);
   app.post('/session', accountController.postSession);
@@ -74,6 +76,7 @@ redisClient.connect().then(() => {
   app.get('/', generalController.getIndex);
   app.get('/*', generalController.getNotFound);
 
+  // Setup socket io
   const server = http.createServer(app);
   const io = new Server(server);
 
@@ -105,6 +108,7 @@ redisClient.connect().then(() => {
     console.log(`socket ${id} has joined room ${room}`);
   }); */
 
+  // Start server
   server.listen(3000, (err) => {
     if (err) throw err;
   });

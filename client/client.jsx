@@ -1,178 +1,52 @@
 const React = require('react');
-const ReactDOM = require('react-dom');
+//const ReactDOM = require('react-dom');
 
-const root = document.querySelector('#content');
-let socket;
+import { createRoot } from 'react-dom/client';
 
-function NotFoundPage() {
-    return (<>
-    </>)
-}
+import Credentials from './pages/Credentials.jsx';
+import Draw from './pages/Draw.jsx';
+import Hub from './pages/Hub.jsx';
+import Judge from './pages/Judge.jsx';
+import NotFound from './pages/NotFound.jsx';
 
-function CredentialsPage() {
-    const errorBox = React.useRef(null);
-    return (
-        <>
-            <h1>Credentials Page</h1>
-            <h2>Login</h2>
-            <form onSubmit={async (e) => {
-                e.preventDefault();
-                const user = e.target.querySelector('input[type="text"]').value;
-                const pass = e.target.querySelector('input[type="password"]').value;
-                const res = await fetch('/session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user, pass }),
-                });
-                res.status === 204 ? ReactDOM.render(<HubPage />, root) : errorBox.current.innerHTML = res.error;
-                return false;
-            }}>
-                <input type="text" placeholder="Username" required />
-                <input type="password" placeholder="Password" required />
-                <input type="submit" value="Login" />
-            </form>
-            <h2>Sign Up</h2>
-            <form onSubmit={async (e) => {
-                e.preventDefault();
-                const pass = e.target.querySelector("#pass").value
-                const passConfirm = e.target.querySelector("#passConfirm").value
-                if (pass === passConfirm) {
-                    const user = e.target.querySelector('input[type="text"]').value;
-                    const res = await fetch('/account', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user, pass }),
-                    })
-                    res.status === 201 ? ReactDOM.render(<HubPage />, root) : errorBox.current.innerHTML = res.error;
-                }
-                else {
-                    errorBox.current.innerHTML = "Passwords do not match"
-                }
-                return false;
-            }}>
-                <input type="text" placeholder="Username" required />
-                <input id="pass" type="password" placeholder="Password" required />
-                <input id="passConfirm" type="password" placeholder="Retype Password" required />
-                <input type="submit" value="Sign Up" />
-            </form>
-            <h2>Errors</h2>
-            <p ref={errorBox}></p>
-        </>
-    );
-}
+const domNode = document.querySelector("#root");
+const root = createRoot(domNode);
 
-function HubPage() {
-    const roomList = React.useRef(null);
-    React.useEffect(() => {
-        socket.on('room create', (room) => {
+const socket = io();
 
-        })
-    })
-    socket = io();
-    return (
-        <>
-            <h1>Hub Page</h1>
-            <button onClick={async (e) => {
-                e.preventDefault();
-                await fetch('/session', { method: 'DELETE' })
-                ReactDOM.render(<CredentialsPage />, root)
-                return false;
-            }} type="button">Logout</button>
-            <h2>Join Room</h2>
-            <p>If the room doesn't exist, it will be created for you.</p>
-            <form id="roomForm" onSubmit={async (e) => {
-                e.preventDefault();
-                const player = e.target.querySelector('select').value;
-                const room = e.target.querySelector('input[type="text"]').value;
-                await fetch('/session', {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ player, room }),
-                })
-                socket.emit('room join', room);
-                player === "2" ? ReactDOM.render(<JudgePage />, root) : ReactDOM.render(<DrawPage player={player} room={room} />, root)
-                return false;
-            }}>
-                <input type="text" placeholder='Room Name' required></input>
-                <select>
-                    <option value="0" selected="selected">Drawer 1</option>
-                    <option value="1">Drawer 2</option>
-                    <option value="2">Judge</option>
-                </select>
-                <input type="submit" value="Join Room"></input>
-            </form>
-            <h2>Rooms</h2>
-            <ul ref={roomList}>
-
-            </ul>
-            <h2>Errors</h2>
-        </>
-    );
-}
-
-function DrawPage({ player, room }) {
-    React.useEffect(() => {
-        // Reusing drawing code from pooxle project (with slight tweaks)
-        const cvs = document.querySelector("canvas");
-        const ctx = cvs.getContext("2d");
-        ctx.strokeStyle = "black";
-        let radius = 5;
-        let x;
-        let y;
-        let timer;
-        cvs.addEventListener("mousemove", (e) => {
-            // put canvas coords in global space
-            const cvsPos = cvs.getBoundingClientRect();
-            const cvsX = cvsPos.x;
-            const cvsY = cvsPos.y;
-            const canXAbs = cvsX + window.scrollX;
-            const canYAbs = cvsY + window.scrollY;
-            // put mouse coords relative to canvas space
-            const cvsMouseX = e.pageX - canXAbs;
-            const cvsMouseY = e.pageY - canYAbs;
-            x = cvsMouseX;
-            y = cvsMouseY;
-        });
-        cvs.addEventListener("mousedown", () => {
-            timer = setInterval(() => {
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, 2 * Math.PI);
-                ctx.fill();
-                socket.emit(`draw`, {num: player, room: room, src: cvs.toDataURL() });
-            });
-        });
-        function mouseDone() {
-            clearInterval(timer);
-        }
-        cvs.addEventListener("mouseup", mouseDone);
-        cvs.addEventListener("mouseleave", mouseDone);
-    })
-    return (
-        <>
-            <h1>Player {player} Draw Page</h1>
-            <canvas width="500" height="500"></canvas>
-        </>
-    );
-}
-
-function JudgePage() {
-    const p0 = React.useRef(null)
-    const p1 = React.useRef(null)
-    React.useEffect(() => {
-        // Instead of pasting an entire giant image every time, try just mimicing the drawing action bit by bit
-        // https://wesbos.com/html5-canvas-websockets-nodejs
-        socket.on('draw', (p) => p.num === "0" ? p0.current.setAttribute("src", p.src) : p1.current.setAttribute("src", p.src))
-    })
-    return (
-        <>
-            <h1>Judge Page</h1>
-            <img id="p0" ref={p0}/>
-            <img id="p1" ref={p1}/>
-        </>
-    )
+function Index({ init, room = "", player = -1, socket }) {
+    const [page, setPage] = React.useState(init);
+    const [gameContextValue, setGameContextValue] = React.useState({ room, player, socket });
+    const gameContext = React.createContext(gameContextValue);
+    switch (page) {
+        case "creds": return (<Credentials setPage={setPage} />);
+        case "hub": return (<Hub setPage={setPage} setGameContextValue={setGameContextValue} />);
+        case "draw": return (<gameContext.Provider value={gameContext}><Draw setPage={setPage} gameContext={gameContext} /></gameContext.Provider>);
+        case "judge": return (<gameContext.Provider value={gameContext}><Judge setPage={setPage} gameContext={gameContext} /></gameContext.Provider>);
+        default: return (<NotFound setPage={setPage} />);
+    }
 }
 
 window.onload = async () => {
-    const res = await fetch('/session', { method: 'HEAD' })
-    res.status === 204 ? ReactDOM.render(<HubPage />, root) : ReactDOM.render(<CredentialsPage />, root)
+    const res = await fetch('/session', {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+    });
+    if (res.status === 404) root.render(<Index init={"creds"} />);
+    else {
+        const sessionCookie = await res.json();
+        const room = sessionCookie.room;
+        const player = sessionCookie.player;
+        if (room) {
+            if (player !== "2") {
+                root.render(<Index init={"draw"} room={room} player={player} socket={socket} />)
+            }
+            else {
+                root.render(<Index init={"judge"} room={room} player={player} socket={socket} />)
+            }
+        }
+        else {
+            root.render(<Index init={"hub"} />);
+        }
+    }
 }

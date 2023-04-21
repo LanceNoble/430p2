@@ -1,6 +1,6 @@
-const AccountModel = require('../models/Account.js');
+const { AccountModel } = require('../models/Account.js');
 
-const getSession = (req, res) => res.status(200).json(req.session.account);
+const getSession = (req, res) => (req.session.account ? res.status(200).json(req.session.account) : res.status(404).json({ error: 'session cookie not found' }));
 
 const headSession = (req, res) => (req.session.account ? res.status(204).end()
   : res.status(404).end());
@@ -22,10 +22,10 @@ const deleteSession = (req, res) => {
 };
 
 const patchSession = (req, res) => {
-  const { player } = req.body;
   const { room } = req.body;
-  if (player) req.session.account.player = player;
+  const { player } = req.body;
   if (room) req.session.account.room = room;
+  if (player) req.session.account.player = player;
   res.status(204).end();
 };
 

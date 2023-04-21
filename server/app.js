@@ -36,12 +36,12 @@ redisClient.connect().then(() => {
   const app = express();
 
   // Setup global middleware
-  /*app.use((req, res, next) => {
+  app.use((req, res, next) => {
     if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] !== 'https') {
       res.redirect(`https://${req.hostname}${req.url}`);
     }
     next();
-  });*/
+  });
   app.use(helmet());
   app.use('/assets', express.static(path.resolve(`${__dirname}/../hosted/`)));
   // https://favicon.io
@@ -114,7 +114,7 @@ redisClient.connect().then(() => {
   }); */
 
   // Start server
-  server.listen(3000, (err) => {
+  server.listen(process.env.PORT || 3000, (err) => {
     if (err) throw err;
   });
 });

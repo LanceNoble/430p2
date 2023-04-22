@@ -11,7 +11,7 @@ export default function Draw({ gameContext, setPage }) {
         ctx.lineCap = 'round';
         let cvsPos = cvs.getBoundingClientRect();
         let cvsMousePos;
-        let isDrawing;
+        let drawing;
         function getCVSMousePos(e) {
             const x = e.pageX - (cvsPos.x + window.scrollX);
             const y = e.pageY - (cvsPos.y + window.scrollY);
@@ -19,21 +19,22 @@ export default function Draw({ gameContext, setPage }) {
         }
         window.addEventListener('resize', () => cvsPos = cvs.getBoundingClientRect());
         cvs.addEventListener("mousemove", (e) => {
-            if (isDrawing) {
+            if (drawing) {
                 cvsMousePos = getCVSMousePos(e);
                 ctx.lineTo(cvsMousePos.x, cvsMousePos.y);
                 ctx.stroke();
-                game.socket.emit('draw', { room: game.room, num: game.player, src: cvs.toDataURL() });
+                game.socket.emit('draw', game.room, cvsMousePos );
             }
         });
         cvs.addEventListener("mousedown", (e) => {
-            isDrawing = true;
+            drawing = true;
             ctx.beginPath();
             cvsMousePos = getCVSMousePos(e);
             ctx.moveTo(cvsMousePos.x, cvsMousePos.y);
+            game.socket.emit('draw start', game.room, game.player, cvsMousePos );
         });
-        cvs.addEventListener("mouseup", () => isDrawing = false);
-        cvs.addEventListener("mouseleave", () => isDrawing = false);
+        cvs.addEventListener("mouseup", () => drawing = false);
+        cvs.addEventListener("mouseleave", () => drawing = false);
     })
     return (
         <>

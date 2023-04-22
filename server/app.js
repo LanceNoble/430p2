@@ -97,8 +97,12 @@ redisClient.connect().then(() => {
       socket.leave(room);
     });
 
-    socket.on('draw', (p) => {
-      io.to(p.room).emit('draw', { num: p.num, src: p.src });
+    socket.on('draw start', (room, player, cvsMousePos) => {
+      io.to(room).emit('draw start', player, cvsMousePos);
+    });
+
+    socket.on('draw', (room, cvsMousePos) => {
+      io.to(room).emit('draw', cvsMousePos);
     });
   });
 

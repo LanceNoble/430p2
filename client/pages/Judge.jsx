@@ -2,22 +2,37 @@ const React = require('react');
 
 export default function Judge({ gameContext, setPage }) {
     const game = React.useContext(gameContext);
-
-    const p0 = React.useRef(null)
-    const p1 = React.useRef(null)
+    const drawer1Canvas = React.useRef(null);
+    const drawer2Canvas = React.useRef(null);
     React.useEffect(() => {
-        // Instead of pasting an entire giant image every time, try just mimicing the drawing action bit by bit
-        // https://wesbos.com/html5-canvas-websockets-nodejs
-        game.socket.on('draw', (p) => {
-            p.num === "0" ? p0.current.setAttribute("src", p.src) : p1.current.setAttribute("src", p.src)
-            //console.log("a drawing is being received");
-        })
+        const drawer1CTX = drawer1Canvas.current.getContext('2d');
+        drawer1CTX.strokeStyle = "black";
+        drawer1CTX.lineWidth = 5;
+        drawer1CTX.lineCap = 'round';
+
+        const drawer2CTX = drawer2Canvas.current.getContext('2d');
+        drawer2CTX.strokeStyle = "black";
+        drawer2CTX.lineWidth = 5;
+        drawer2CTX.lineCap = 'round';
+
+        let activeCTX;
+
+        game.socket.on('draw start', (player, cvsMousePos) => {
+            player === "0" ? activeCTX = drawer1CTX : activeCTX = drawer2CTX;
+            activeCTX.beginPath();
+            activeCTX.moveTo(cvsMousePos.x, cvsMousePos.y);
+        });
+
+        game.socket.on('draw', (cvsMousePos) => {
+            activeCTX.lineTo(cvsMousePos.x, cvsMousePos.y);
+            activeCTX.stroke();
+        });
     })
     return (
         <>
             <h1>You are the Judge in Room "{game.room}"</h1>
-            <img id="p0" ref={p0} />
-            <img id="p1" ref={p1} />
+            <canvas ref={drawer1Canvas} width="500" height="500"></canvas>
+            <canvas ref={drawer2Canvas} width="500" height="500"></canvas>
             <button onClick={async (e) => {
                 e.preventDefault();
                 game.socket.emit('room leave', game.room);

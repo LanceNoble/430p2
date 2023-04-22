@@ -36,6 +36,7 @@ window.onload = async () => {
         const sessionCookie = await res.json();
         const room = sessionCookie.room;
         const player = sessionCookie.player;
+        socket.emit('room join', room);
         if (room !== "") {
             if (player !== "2") {
                 root.render(<Index init={"draw"} room={room} player={player} socket={socket} />)

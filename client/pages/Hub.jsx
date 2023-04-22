@@ -17,11 +17,6 @@ export default function Hub({ setPage, setGameContextValue }) {
                 e.preventDefault();
                 const room = e.target.querySelector('input[type="text"]').value;
                 const player = e.target.querySelector('select').value;
-                await fetch('/session', {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ room, player }),
-                })
                 setGameContextValue({ room, player, socket });
                 socket.emit('room join', room);
                 player === "2" ? setPage("judge") : setPage("draw")

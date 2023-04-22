@@ -18,14 +18,6 @@ const deleteSession = (req, res) => {
   res.status(204).end();
 };
 
-const patchSession = (req, res) => {
-  const { room } = req.body;
-  const { player } = req.body;
-  req.session.account.room = room;
-  req.session.account.player = player;
-  res.status(204).end();
-};
-
 const postAccount = async (req, res) => {
   const user = `${req.body.user}`;
   const pass = `${req.body.pass}`;
@@ -50,5 +42,4 @@ module.exports = {
   getSession,
   postSession,
   deleteSession,
-  patchSession,
 };

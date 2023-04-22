@@ -68,7 +68,6 @@ redisClient.connect().then(() => {
   app.get('/session', accountController.getSession);
   app.post('/session', accountController.postSession);
   app.delete('/session', accountController.deleteSession);
-  app.patch('/session', accountController.patchSession);
 
   app.post('/account', accountController.postAccount);
 

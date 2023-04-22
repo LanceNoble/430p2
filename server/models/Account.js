@@ -26,8 +26,6 @@ const AccountSchema = new mongoose.Schema({
 AccountSchema.statics.toAPI = (doc) => ({
   username: doc.username,
   _id: doc._id,
-  room: '',
-  player: '-1',
 });
 
 AccountSchema.statics.generateHash = (password) => bcrypt.hash(password, saltRounds);

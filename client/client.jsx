@@ -31,22 +31,5 @@ window.onload = async () => {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
     });
-    if (res.status === 404) root.render(<Index init={"creds"} />);
-    else {
-        const sessionCookie = await res.json();
-        const room = sessionCookie.room;
-        const player = sessionCookie.player;
-        socket.emit('room join', room);
-        if (room !== "") {
-            if (player !== "2") {
-                root.render(<Index init={"draw"} room={room} player={player} socket={socket} />)
-            }
-            else {
-                root.render(<Index init={"judge"} room={room} player={player} socket={socket} />)
-            }
-        }
-        else {
-            root.render(<Index init={"hub"} />);
-        }
-    }
+    res.status === 404 ? root.render(<Index init={"creds"} />) : root.render(<Index init={"hub"} />)
 }

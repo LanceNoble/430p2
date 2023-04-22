@@ -36,11 +36,6 @@ export default function Judge({ gameContext, setPage }) {
             <button onClick={async (e) => {
                 e.preventDefault();
                 game.socket.emit('room leave', game.room);
-                await fetch('/session', {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ room: "", player: "-1"}),
-                });
                 setPage("hub");
                 return false;
             }} type="button">Leave Game</button>

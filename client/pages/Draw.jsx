@@ -7,46 +7,33 @@ export default function Draw({ gameContext, setPage }) {
         const cvs = document.querySelector("canvas");
         const ctx = cvs.getContext("2d");
         ctx.strokeStyle = "black";
-        let radius = 5;
-        let x;
-        let y;
-        let timer;
-        let req;
-        function paint() {
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, 2 * Math.PI);
-            ctx.fill();
-            game.socket.emit('draw', { room: game.room, num: game.player, src: cvs.toDataURL() });
-            req = window.requestAnimationFrame(paint);
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        let cvsPos = cvs.getBoundingClientRect();
+        let cvsMousePos;
+        let isDrawing;
+        function getCVSMousePos(e) {
+            const x = e.pageX - (cvsPos.x + window.scrollX);
+            const y = e.pageY - (cvsPos.y + window.scrollY);
+            return {x, y};
         }
+        window.addEventListener('resize', () => cvsPos = cvs.getBoundingClientRect());
         cvs.addEventListener("mousemove", (e) => {
-            // put canvas coords in global space
-            const cvsPos = cvs.getBoundingClientRect();
-            const cvsX = cvsPos.x;
-            const cvsY = cvsPos.y;
-            const canXAbs = cvsX + window.scrollX;
-            const canYAbs = cvsY + window.scrollY;
-            // put mouse coords relative to canvas space
-            const cvsMouseX = e.pageX - canXAbs;
-            const cvsMouseY = e.pageY - canYAbs;
-            x = cvsMouseX;
-            y = cvsMouseY;
-        });
-        cvs.addEventListener("mousedown", () => {
-            req = window.requestAnimationFrame(paint);
-            /*timer = setInterval(() => {
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, 2 * Math.PI);
-                ctx.fill();
+            if (isDrawing) {
+                cvsMousePos = getCVSMousePos(e);
+                ctx.lineTo(cvsMousePos.x, cvsMousePos.y);
+                ctx.stroke();
                 game.socket.emit('draw', { room: game.room, num: game.player, src: cvs.toDataURL() });
-            });*/
+            }
         });
-        function mouseDone() {
-            //clearInterval(timer);
-            window.cancelAnimationFrame(req);
-        }
-        cvs.addEventListener("mouseup", mouseDone);
-        cvs.addEventListener("mouseleave", mouseDone);
+        cvs.addEventListener("mousedown", (e) => {
+            isDrawing = true;
+            ctx.beginPath();
+            cvsMousePos = getCVSMousePos(e);
+            ctx.moveTo(cvsMousePos.x, cvsMousePos.y);
+        });
+        cvs.addEventListener("mouseup", () => isDrawing = false);
+        cvs.addEventListener("mouseleave", () => isDrawing = false);
     })
     return (
         <>

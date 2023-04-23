@@ -2,7 +2,10 @@
 Web game where players compete over who can make the better drawing
 
 ## To-Do
-1. Make client socket draw event only send drawing data necessary for replicating drawings on judge page instead of sending an entirely massive base64string
-2. Make lobbies only allow 2 drawers but any amount of judgers
-3. Add voting system to judge page
-4. Make Draw and Judge react components children of a parent GamePage component
+1. Style
+2. Require rooms to have 2 drawers and at least 1 judge
+3. Time drawing
+4. Let judge vote after time
+5. Show rooms
+6. Add leaderboard
+7. Countdown when there are 2 drawers and at least 1 judge

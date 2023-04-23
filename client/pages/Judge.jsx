@@ -1,44 +1,44 @@
 const React = require('react');
 
-export default function Judge({ gameContext, setPage }) {
-    const game = React.useContext(gameContext);
-    const drawer1Canvas = React.useRef(null);
-    const drawer2Canvas = React.useRef(null);
+export default function Judge({ setPage, room, socket }) {
     React.useEffect(() => {
-        const drawer1CTX = drawer1Canvas.current.getContext('2d');
+        socket.emit("room join", room);
+        const drawer1CVS = document.querySelector("#drawer1");
+        const drawer1CTX = drawer1CVS.getContext('2d');
         drawer1CTX.strokeStyle = "black";
         drawer1CTX.lineWidth = 5;
         drawer1CTX.lineCap = 'round';
 
-        const drawer2CTX = drawer2Canvas.current.getContext('2d');
+        const drawer2CVS = document.querySelector("#drawer2");
+        const drawer2CTX = drawer2CVS.getContext('2d');
         drawer2CTX.strokeStyle = "black";
         drawer2CTX.lineWidth = 5;
         drawer2CTX.lineCap = 'round';
 
         let activeCTX;
 
-        game.socket.on('draw start', (player, cvsMousePos) => {
+        socket.on('draw start', (player, cvsMousePos) => {
             player === "0" ? activeCTX = drawer1CTX : activeCTX = drawer2CTX;
             activeCTX.beginPath();
             activeCTX.moveTo(cvsMousePos.x, cvsMousePos.y);
         });
 
-        game.socket.on('draw', (cvsMousePos) => {
+        socket.on('draw', (cvsMousePos) => {
             activeCTX.lineTo(cvsMousePos.x, cvsMousePos.y);
             activeCTX.stroke();
         });
     })
     return (
         <>
-            <h1>You are the Judge in Room "{game.room}"</h1>
-            <canvas ref={drawer1Canvas} width="500" height="500"></canvas>
-            <canvas ref={drawer2Canvas} width="500" height="500"></canvas>
+            <h1>You are the Judge in Room "{room}"</h1>
+            <canvas id="drawer1" width="500" height="500"></canvas>
+            <canvas id="drawer2" width="500" height="500"></canvas>
             <button onClick={async (e) => {
                 e.preventDefault();
-                game.socket.emit('room leave', game.room);
+                socket.emit('room leave', room);
                 setPage("hub");
                 return false;
-            }} type="button">Leave Game</button>
+            }} type="button">Leave</button>
         </>
     )
 }

@@ -8,20 +8,21 @@ import Hub from './pages/Hub.jsx';
 import Judge from './pages/Judge.jsx';
 import NotFound from './pages/NotFound.jsx';
 
+let socket = io();
+
 const domNode = document.querySelector("#root");
 const root = createRoot(domNode);
 
-const socket = io();
-
-function Index({ init, room = "", player = -1, socket }) {
+function Index({ init }) {
     const [page, setPage] = React.useState(init);
-    const [gameContextValue, setGameContextValue] = React.useState({ room, player, socket });
-    const gameContext = React.createContext(gameContextValue);
+    const roomRef = React.useRef(null);
+    const playerRef = React.useRef(null);
+
     switch (page) {
         case "creds": return (<Credentials setPage={setPage} />);
-        case "hub": return (<Hub setPage={setPage} setGameContextValue={setGameContextValue} />);
-        case "draw": return (<gameContext.Provider value={gameContextValue}><Draw setPage={setPage} gameContext={gameContext} /></gameContext.Provider>);
-        case "judge": return (<gameContext.Provider value={gameContextValue}><Judge setPage={setPage} gameContext={gameContext} /></gameContext.Provider>);
+        case "hub" : return (<Hub setPage={setPage} roomRef={roomRef} playerRef={playerRef} />);
+        case "draw": return (<Draw setPage={setPage} room={roomRef.current} player={playerRef.current} socket={socket} />);
+        case "judge": return (<Judge setPage={setPage} room={roomRef.current} socket={socket}/>);
         default: return (<NotFound setPage={setPage} />);
     }
 }

@@ -1,7 +1,6 @@
 const React = require('react');
 
-export default function Hub({ setPage, setGameContextValue }) {
-    const socket = io();
+export default function Hub({ setPage, roomRef, playerRef }) {
     return (
         <>
             <h1>Hub Page</h1>
@@ -15,11 +14,9 @@ export default function Hub({ setPage, setGameContextValue }) {
             <p>If the room doesn't exist, it will be created for you.</p>
             <form id="roomForm" onSubmit={async (e) => {
                 e.preventDefault();
-                const room = e.target.querySelector('input[type="text"]').value;
-                const player = e.target.querySelector('select').value;
-                setGameContextValue({ room, player, socket });
-                socket.emit('room join', room);
-                player === "2" ? setPage("judge") : setPage("draw")
+                roomRef.current = e.target.querySelector('input[type="text"]').value;
+                playerRef.current = e.target.querySelector('select').value;
+                playerRef.current === "2" ? setPage("judge") : setPage("draw")
                 return false;
             }}>
                 <input type="text" placeholder='Room Name' required></input>

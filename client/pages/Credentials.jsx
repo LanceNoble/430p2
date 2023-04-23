@@ -15,7 +15,11 @@ export default function Credentials({ setPage }) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user, pass }),
                 });
-                res.status === 204 ? setPage("hub") : errorBox.current.innerHTML = res.error;
+                if (res.status === 204) {
+                    setPage("hub");
+                } else {
+                    errorBox.current.innerHTML = res.error;
+                }
                 return false;
             }}>
                 <input type="text" placeholder="Username" required />
@@ -34,7 +38,11 @@ export default function Credentials({ setPage }) {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ user, pass }),
                     })
-                    res.status === 201 ? setPage("hub") : errorBox.current.innerHTML = res.error;
+                    if (res.status === 201) {
+                        setPage("hub");
+                    } else {
+                        errorBox.current.innerHTML = res.error;
+                    }
                 }
                 else {
                     errorBox.current.innerHTML = "Passwords do not match"

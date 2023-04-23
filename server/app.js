@@ -79,9 +79,9 @@ redisClient.connect().then(() => {
   const io = new Server(server);
 
   io.on('connection', (socket) => {
-    // console.log('a user connected');
+    console.log(`user ${socket.id} connected`);
     socket.on('disconnect', () => {
-      // console.log('a user disconnected');
+      console.log(`user ${socket.id} disconnected`);
     });
 
     socket.on('room join', (room) => {

@@ -15,14 +15,14 @@ const root = createRoot(domNode);
 
 function Index({ init }) {
     const [page, setPage] = React.useState(init);
-    const roomRef = React.useRef(null);
-    const playerRef = React.useRef(null);
+    const roomNameRef = React.useRef(null);
+    const playerTypeRef = React.useRef(null);
 
     switch (page) {
         case "creds": return (<Credentials setPage={setPage} />);
-        case "hub" : return (<Hub setPage={setPage} roomRef={roomRef} playerRef={playerRef} />);
-        case "draw": return (<Draw setPage={setPage} room={roomRef.current} player={playerRef.current} socket={socket} />);
-        case "judge": return (<Judge setPage={setPage} room={roomRef.current} socket={socket}/>);
+        case "hub" : return (<Hub setPage={setPage} roomNameRef={roomNameRef} playerTypeRef={playerTypeRef} socket={socket} />);
+        case "draw": return (<Draw setPage={setPage} roomName={roomNameRef.current} playerType={playerTypeRef.current} socket={socket} />);
+        case "judge": return (<Judge setPage={setPage} roomName={roomNameRef.current} playerType={playerTypeRef.current} socket={socket}/>);
         default: return (<NotFound setPage={setPage} />);
     }
 }

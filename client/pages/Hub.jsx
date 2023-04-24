@@ -1,6 +1,25 @@
 const React = require('react');
 
-export default function Hub({ setPage, roomRef, playerRef }) {
+export default function Hub({ setPage, roomNameRef, playerTypeRef, socket }) {
+    React.useEffect(() => {
+        const roomList = document.querySelector("ul");
+        socket.emit("room join", "hub");
+        socket.emit(`rooms request`);
+        socket.once(`rooms sent`, (rooms) => {
+            for (const room of rooms) {
+                const li = document.createElement("li");
+                li.innerHTML = `Room Name: ${room.roomName} <br> Drawers: ${room.drawerCount}/2 <br> Judges: ${room.judgeCount}/1 <br>`;
+                roomList.appendChild(li);
+            }
+        });
+        socket.on('room join error', (msg) => {
+            alert(`${msg}`);
+            return false;
+        });
+        socket.on('room join success', () => {
+            playerTypeRef.current === "Judge" ? setPage("judge") : setPage("draw");
+        });
+    });
     return (
         <>
             <h1>Hub Page</h1>
@@ -14,16 +33,16 @@ export default function Hub({ setPage, roomRef, playerRef }) {
             <p>If the room doesn't exist, it will be created for you.</p>
             <form id="roomForm" onSubmit={async (e) => {
                 e.preventDefault();
-                roomRef.current = e.target.querySelector('input[type="text"]').value;
-                playerRef.current = e.target.querySelector('select').value;
-                playerRef.current === "2" ? setPage("judge") : setPage("draw")
+                roomNameRef.current = e.target.querySelector('input[type="text"]').value;
+                playerTypeRef.current = e.target.querySelector('select').value;
+                socket.emit("room join", roomNameRef.current, playerTypeRef.current);
                 return false;
             }}>
                 <input type="text" placeholder='Room Name' required></input>
                 <select>
-                    <option value="0" selected="selected">Drawer 1</option>
-                    <option value="1">Drawer 2</option>
-                    <option value="2">Judge</option>
+                    <option value="Drawer 1" selected="selected">Drawer 1</option>
+                    <option value="Drawer 2">Drawer 2</option>
+                    <option value="Judge">Judge</option>
                 </select>
                 <input type="submit" value="Join Room"></input>
             </form>

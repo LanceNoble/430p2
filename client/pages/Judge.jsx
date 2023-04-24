@@ -1,8 +1,7 @@
 const React = require('react');
 
-export default function Judge({ setPage, room, socket }) {
+export default function Judge({ setPage, roomName, playerType, socket }) {
     React.useEffect(() => {
-        socket.emit("room join", room);
         const drawer1CVS = document.querySelector("#drawer1");
         const drawer1CTX = drawer1CVS.getContext('2d');
         drawer1CTX.strokeStyle = "black";
@@ -17,8 +16,8 @@ export default function Judge({ setPage, room, socket }) {
 
         let activeCTX;
 
-        socket.on('draw start', (player, cvsMousePos) => {
-            player === "0" ? activeCTX = drawer1CTX : activeCTX = drawer2CTX;
+        socket.on('draw start', (playerType, cvsMousePos) => {
+            playerType === "Drawer 1" ? activeCTX = drawer1CTX : activeCTX = drawer2CTX;
             activeCTX.beginPath();
             activeCTX.moveTo(cvsMousePos.x, cvsMousePos.y);
         });
@@ -27,15 +26,15 @@ export default function Judge({ setPage, room, socket }) {
             activeCTX.lineTo(cvsMousePos.x, cvsMousePos.y);
             activeCTX.stroke();
         });
-    })
+    });
     return (
         <>
-            <h1>You are the Judge in Room "{room}"</h1>
+            <h1>You are the {playerType} in Room "{roomName}"</h1>
             <canvas id="drawer1" width="500" height="500"></canvas>
             <canvas id="drawer2" width="500" height="500"></canvas>
             <button onClick={async (e) => {
                 e.preventDefault();
-                socket.emit('room leave', room);
+                socket.emit('room leave', roomName);
                 setPage("hub");
                 return false;
             }} type="button">Leave</button>

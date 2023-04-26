@@ -29,17 +29,19 @@ const patchAccount = async (req, res) => {
 
 const headSession = (req, res) => (req.session.acc ? res.status(204).end() : res.status(404).end());
 
-const patchSession = async (req, res) => {
+const postSession = async (req, res) => {
   const { user } = req.body;
-  Account.findOne({ user }, async (err, acc) => {
-    if (err) return res.status(401).end();
-    const match = await bcrypt.compare(req.body.pass, acc.password);
+  try {
+    const doc = await Account.findOne({ user }).lean();
+    const match = await bcrypt.compare(req.body.pass, doc.password);
     if (match) {
       req.session.acc = { user };
-      return res.status(204).end();
+      return res.status(201).json(req.session.acc);
     }
-    return res.status(202).end();
-  }).lean();
+    throw new Error('Wrong password!');
+  } catch (err) {
+    return res.status(401).json(err);
+  }
 };
 
 const deleteSession = (req, res) => {
@@ -52,6 +54,6 @@ module.exports = {
   patchAccount,
 
   headSession,
-  patchSession,
+  postSession,
   deleteSession,
 };

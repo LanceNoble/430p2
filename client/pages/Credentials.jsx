@@ -10,8 +10,8 @@ export default function Credentials({ setPage }) {
                 const user = e.target.querySelector('input[type="text"]').value
                 const pass = e.target.querySelector('input[type="password"]').value
                 const res = await fetch('/session', {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({ user, pass }),
                 })
                 res.status === 204 ? setPage('hub') : alert('Wrong username or password!')

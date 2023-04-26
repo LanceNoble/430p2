@@ -1,22 +1,23 @@
 const React = require('react')
 
-export default function Hub({ setPage, roomNameRef, playerTypeRef, socket }) {
+export default function Hub({ setPage, roomNameRef, playerTypeRef, socketRef }) {
+    socketRef.current = io()
     React.useEffect(() => {
         const roomList = document.querySelector('ul')
-        socket.emit('room join', 'hub')
-        socket.emit(`rooms request`)
-        socket.once(`rooms sent`, (rooms) => {
+        socketRef.current.emit('room join', 'hub')
+        socketRef.current.emit(`rooms request`)
+        socketRef.current.once(`rooms sent`, (rooms) => {
             for (const room of rooms) {
                 const li = document.createElement('li')
                 li.innerHTML = `Room Name: ${room.roomName} <br> Drawers: ${room.drawerCount}/2 <br> Judges: ${room.judgeCount}/1 <br>`
                 roomList.appendChild(li)
             }
         })
-        socket.on('room join error', (msg) => {
+        socketRef.current.on('room join error', (msg) => {
             alert(`${msg}`)
             return false
         })
-        socket.on('room join success', () => {
+        socketRef.current.on('room join success', () => {
             playerTypeRef.current === 'Judge' ? setPage('judge') : setPage('draw')
         })
     })
@@ -26,6 +27,7 @@ export default function Hub({ setPage, roomNameRef, playerTypeRef, socket }) {
             <button onClick={async (e) => {
                 e.preventDefault()
                 await fetch('/session', { method: 'DELETE' })
+                socketRef.current.disconnect();
                 setPage('creds')
                 return false
             }} type='button'>Logout</button>
@@ -35,7 +37,7 @@ export default function Hub({ setPage, roomNameRef, playerTypeRef, socket }) {
                 e.preventDefault()
                 roomNameRef.current = e.target.querySelector('input[type="text"]').value
                 playerTypeRef.current = e.target.querySelector('select').value
-                socket.emit('room join', roomNameRef.current, playerTypeRef.current)
+                socketRef.current.emit('room join', roomNameRef.current, playerTypeRef.current)
                 return false
             }}>
                 <input type='text' placeholder='Room Name' required></input>
@@ -50,7 +52,6 @@ export default function Hub({ setPage, roomNameRef, playerTypeRef, socket }) {
             <ul>
 
             </ul>
-            <h2>Errors</h2>
         </>
     )
 }

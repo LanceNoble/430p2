@@ -50,7 +50,7 @@ redisClient.connect().then(() => {
   app.set('views', `${__dirname}/../views`);
 
   app.head('/session', accountController.headSession);
-  app.patch('/session', accountController.patchSession);
+  app.post('/session', accountController.postSession);
   app.delete('/session', accountController.deleteSession);
 
   app.post('/account', accountController.postAccount);

@@ -18,8 +18,8 @@ const session = require('express-session');
 const http = require('http');
 const { Server } = require('socket.io');
 
+const pageController = require('./controllers/Page.js');
 const accountController = require('./controllers/Account.js');
-const generalController = require('./controllers/General.js');
 
 mongoose.connect(process.env.MONGODB_URI).catch((err) => { if (err) throw err; });
 const redisClient = redis.createClient({ url: process.env.REDISCLOUD_URL });
@@ -27,17 +27,13 @@ redisClient.connect().then(() => {
   const app = express();
 
   app.use((req, res, next) => {
-    if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] !== 'https') {
-      res.redirect(`https://${req.hostname}${req.url}`);
-    }
+    if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] !== 'https') res.redirect(`https://${req.hostname}${req.url}`);
     next();
   });
   app.use(helmet());
   app.use('/assets', express.static(path.resolve(`${__dirname}/../hosted/`)));
-  // https://favicon.io
   app.use(favicon(`${__dirname}/../hosted/img/favicon.png`));
   app.use(compression());
-  app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
   app.use(session({
     key: 'sessionid',
@@ -53,14 +49,15 @@ redisClient.connect().then(() => {
   app.set('view engine', 'handlebars');
   app.set('views', `${__dirname}/../views`);
 
-  app.get('/session', accountController.getSession);
-  app.post('/session', accountController.postSession);
+  app.head('/session', accountController.headSession);
+  app.patch('/session', accountController.patchSession);
   app.delete('/session', accountController.deleteSession);
 
   app.post('/account', accountController.postAccount);
+  app.patch('/account', accountController.patchAccount);
 
-  app.get('/', generalController.getIndex);
-  app.get('/*', generalController.getNotFound);
+  app.get('/', pageController.getIndex);
+  app.get('/*', pageController.getNotFound);
 
   const server = http.createServer(app);
   const io = new Server(server);
@@ -77,7 +74,7 @@ redisClient.connect().then(() => {
           return;
         }
       }
-      // Object.assign prevents airbnb eslint no-param-reassign
+      // Object.assign avoids airbnb eslint no-param-reassign
       const shallowSocketData = socket.data;
       shallowSocketData.playerType = playerType;
       Object.assign(socket.data, shallowSocketData);

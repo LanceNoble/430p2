@@ -1,6 +1,6 @@
-const React = require('react');
+const React = require('react')
 
-export default function NotFound({setPage}) {
+export default function NotFound({ setPage }) {
     return (<>
     </>)
 }

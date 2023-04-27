@@ -1,12 +1,22 @@
 const React = require('react')
 
 export default function Draw({ setPage, roomName, playerType, socket }) {
-    React.useEffect(() => {
+    React.useEffect(async () => {
+        const res = await fetch('/session', { method: 'GET' })
+        const acc = await res.json()
         const cvs = document.querySelector('canvas')
         const ctx = cvs.getContext('2d')
         ctx.strokeStyle = 'black'
         ctx.lineWidth = 5
         ctx.lineCap = 'round'
+        if (acc.premium) {
+            const div = document.querySelector('div')
+            const changeColor = document.createElement('button')
+            div.appendChild(changeColor)
+            changeColor.onclick = () => {
+                ctx.strokeStyle = 'blue'
+            }
+        }
         let cvsPos = cvs.getBoundingClientRect()
         let cvsMousePos
         let drawing
@@ -38,6 +48,7 @@ export default function Draw({ setPage, roomName, playerType, socket }) {
         <>
             <h1>You are {playerType} in Room '{roomName}'</h1>
             <canvas width='500' height='500'></canvas>
+            <div></div>
             <button onClick={async (e) => {
                 e.preventDefault()
                 socket.emit('room leave', roomName)

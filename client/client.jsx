@@ -11,24 +11,24 @@ import NotFound from './pages/NotFound.jsx'
 
 const domNode = document.querySelector('#root')
 const root = createRoot(domNode)
+const socket = io({ autoConnect: false })
 
 function Index({ init }) {
     const [page, setPage] = React.useState(init)
-    const socketRef = React.useRef(null)
     const roomNameRef = React.useRef(null)
     const playerTypeRef = React.useRef(null)
 
     switch (page) {
         case 'creds': return (<Credentials setPage={setPage} />)
-        case 'hub': return (<Hub setPage={setPage} roomNameRef={roomNameRef} playerTypeRef={playerTypeRef} socketRef={socketRef} />)
+        case 'hub': return (<Hub setPage={setPage} roomNameRef={roomNameRef} playerTypeRef={playerTypeRef} socket={socket} />)
         case 'acc': return (<Account setPage={setPage} />)
-        case 'judge': return (<Judge setPage={setPage} roomName={roomNameRef.current} playerType={playerTypeRef.current} socket={socketRef.current} />)
-        case 'draw': return (<Draw setPage={setPage} roomName={roomNameRef.current} playerType={playerTypeRef.current} socket={socketRef.current} />)
+        case 'judge': return (<Judge setPage={setPage} roomName={roomNameRef.current} playerType={playerTypeRef.current} socket={socket} />)
+        case 'draw': return (<Draw setPage={setPage} roomName={roomNameRef.current} playerType={playerTypeRef.current} socket={socket} />)
         default: return (<NotFound setPage={setPage} />)
     }
 }
 
 window.onload = async () => {
-    const res = await fetch('/session', { method: 'HEAD' })
+    const res = await fetch('/session', { method: 'GET' })
     res.status === 404 ? root.render(<Index init={'creds'} />) : root.render(<Index init={'hub'} />)
 }

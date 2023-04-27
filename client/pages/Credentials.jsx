@@ -14,7 +14,7 @@ export default function Credentials({ setPage }) {
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({ user, pass }),
                 })
-                res.status === 204 ? setPage('hub') : alert('Wrong username or password!')
+                res.status === 201 ? setPage('hub') : alert('Wrong username or password!')
                 return false
             }}>
                 <input type='text' placeholder='Username' required />

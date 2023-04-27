@@ -14,11 +14,11 @@ const AccountSchema = new mongoose.Schema({
   },
   wins: {
     type: Number,
-    required: true,
+    default: 0,
   },
   premium: {
     type: Boolean,
-    required: true,
+    default: false,
   },
 });
 const Account = mongoose.model('Account', AccountSchema);

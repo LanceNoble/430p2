@@ -49,7 +49,7 @@ redisClient.connect().then(() => {
   app.set('view engine', 'handlebars');
   app.set('views', `${__dirname}/../views`);
 
-  app.head('/session', accountController.headSession);
+  app.get('/session', accountController.getSession);
   app.post('/session', accountController.postSession);
   app.delete('/session', accountController.deleteSession);
 

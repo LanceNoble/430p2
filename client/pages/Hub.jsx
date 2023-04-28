@@ -1,12 +1,11 @@
 const React = require('react')
 
 export default function Hub({ setPage, roomNameRef, playerTypeRef, socket }) {
-    socket.connect()
     React.useEffect(() => {
         const roomList = document.querySelector('ul')
         socket.emit('room join', 'hub')
-        socket.emit(`rooms request`)
-        socket.once(`rooms sent`, (rooms) => {
+        socket.emit('rooms request')
+        socket.on('rooms sent', (rooms) => {
             for (const room of rooms) {
                 const li = document.createElement('li')
                 li.innerHTML = `Room Name: ${room.roomName} <br> Drawers: ${room.drawerCount}/2 <br> Judges: ${room.judgeCount}/1 <br>`
@@ -15,29 +14,29 @@ export default function Hub({ setPage, roomNameRef, playerTypeRef, socket }) {
         })
         socket.on('room join error', (msg) => {
             alert(`${msg}`)
-            return false
         })
         socket.on('room join success', () => {
             playerTypeRef.current === 'Judge' ? setPage('judge') : setPage('draw')
         })
+        return () => {
+            socket.off('rooms sent')
+            socket.off('room join error')
+            socket.off('room join success')
+        }
     })
     return (
         <>
             <h1>Hub Page</h1>
-            <button onClick={() => {
-                socket.disconnect()
-                setPage('acc')
-            }}>Account</button>
+            <button onClick={() => setPage('acc')}>Account</button>
             <button onClick={async (e) => {
                 e.preventDefault()
                 await fetch('/session', { method: 'DELETE' })
-                socket.disconnect();
                 setPage('creds')
                 return false
-            }} type='button'>Logout</button>
+            }}>Logout</button>
             <h2>Join Room</h2>
             <p>If the room doesn't exist, it will be created for you.</p>
-            <form id='roomForm' onSubmit={async (e) => {
+            <form onSubmit={async (e) => {
                 e.preventDefault()
                 roomNameRef.current = e.target.querySelector('input[type="text"]').value
                 playerTypeRef.current = e.target.querySelector('select').value

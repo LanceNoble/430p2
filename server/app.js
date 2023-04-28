@@ -1,12 +1,10 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-
 const RedisStore = require('connect-redis').default;
 const redis = require('redis');
 
 const express = require('express');
-
 const expressHandlebars = require('express-handlebars');
 
 const path = require('path');
@@ -15,10 +13,21 @@ const favicon = require('serve-favicon');
 const helmet = require('helmet');
 const session = require('express-session');
 
+const auth = (req, res, next) => {
+  if (req.session.acc) {
+    req.session.auth = 'yes';
+    if (req.session.acc.premium) req.session.premium = 'yes';
+    else req.session.premium = '';
+  } else {
+    req.session.auth = '';
+    req.session.premium = '';
+  }
+  next();
+};
+
 const http = require('http');
 const { Server } = require('socket.io');
 
-const pageController = require('./controllers/Page.js');
 const accountController = require('./controllers/Account.js');
 
 mongoose.connect(process.env.MONGODB_URI).catch((err) => { if (err) throw err; });
@@ -47,17 +56,19 @@ redisClient.connect().then(() => {
 
   app.engine('handlebars', expressHandlebars.engine({ defaultLayout: '' }));
   app.set('view engine', 'handlebars');
-  app.set('views', `${__dirname}/../views`);
+  app.set('views', `${__dirname}/views`);
 
   app.get('/session', accountController.getSession);
   app.post('/session', accountController.postSession);
   app.delete('/session', accountController.deleteSession);
 
+  app.get('/account', accountController.getAccount);
   app.post('/account', accountController.postAccount);
-  app.patch('/account', accountController.patchAccount);
+  app.put('/account', accountController.putAccount);
+  app.delete('/account', accountController.deleteAccount);
 
-  app.get('/', pageController.getIndex);
-  app.get('/*', pageController.getNotFound);
+  app.get('/', auth, (req, res) => res.render('index', { auth: req.session.auth, premium: req.session.premium }));
+  app.get('/*', (req, res) => res.status(404).render('notFound'));
 
   const server = http.createServer(app);
   const io = new Server(server);
@@ -81,7 +92,12 @@ redisClient.connect().then(() => {
       io.to(socket.id).emit('room join success');
     });
 
-    socket.on('room leave', (roomName) => socket.leave(roomName));
+    socket.on('room leave', (roomName) => {
+      const shallowSocketData = socket.data;
+      shallowSocketData.playerType = null;
+      Object.assign(socket.data, shallowSocketData);
+      socket.leave(roomName);
+    });
 
     socket.on('rooms request', () => {
       const rooms = [];
@@ -98,9 +114,7 @@ redisClient.connect().then(() => {
       io.to(socket.id).emit('rooms sent', rooms);
     });
 
-    socket.on('draw start', (roomName, playerType, cvsMousePos) => io.to(roomName).emit('draw start', playerType, cvsMousePos));
-
-    socket.on('draw', (roomName, cvsMousePos) => io.to(roomName).emit('draw', cvsMousePos));
+    socket.on('draw', (roomName, x, y, lastX, lastY, playerType, strokeStyle) => io.to(roomName).emit('draw', x, y, lastX, lastY, playerType, strokeStyle));
   });
 
   server.listen(process.env.PORT || 3000, (err) => {

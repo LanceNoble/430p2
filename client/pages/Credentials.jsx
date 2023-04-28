@@ -1,6 +1,5 @@
 const React = require('react')
-
-export default function Credentials({ setPage }) {
+export default function Credentials({ setPage, premiumRef }) {
     return (
         <>
             <h1>Credentials Page</h1>
@@ -14,7 +13,13 @@ export default function Credentials({ setPage }) {
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({ user, pass }),
                 })
-                res.status === 201 ? setPage('hub') : alert('Wrong username or password!')
+                if (res.status === 201) {
+                    const body = await res.json()
+                    if (body['premium']) premiumRef.current = 'yes'
+                    else premiumRef.current = ''
+                    setPage('hub')
+                }
+                else alert('Wrong username or password!')
                 return false
             }}>
                 <input type='text' placeholder='Username' required />
@@ -30,7 +35,7 @@ export default function Credentials({ setPage }) {
                     const user = e.target.querySelector('input[type="text"]').value
                     const res = await fetch('/account', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                         body: JSON.stringify({ user, pass }),
                     })
                     res.status === 201 ? setPage('hub') : alert('Invalid username!')

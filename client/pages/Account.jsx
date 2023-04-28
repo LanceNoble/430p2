@@ -1,5 +1,5 @@
 const React = require('react')
-export default function Account({ setPage }) {
+export default function Account({ setPage, setPremium, premiumRef }) {
     React.useEffect(() => {
         const winsCounter = document.querySelector("#wins")
     })
@@ -9,11 +9,14 @@ export default function Account({ setPage }) {
             <button onClick={() => setPage('hub')}>Hub</button>
             <button onClick={async () => {
                 const res = await fetch('/account', {
-                    method: 'PATCH',
+                    method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ premium: true }),
                 })
-                if (res.status === 200) alert('You are now premium!')
+                if (res.status === 204) {
+                    premiumRef.current = 'yes'
+                    alert('You are now premium!')
+                }
                 else alert('Failed to pay for premium!')
             }}>Pay for Premium</button>
             <h2>Change Password</h2>

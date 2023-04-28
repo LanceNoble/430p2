@@ -24,6 +24,7 @@ export default function Draw({ setPage, roomName, playerType, socket, premium })
                 const y = e.pageY - (cvsPos.y + window.scrollY)
                 const lastX = x - e.movementX
                 const lastY = y - e.movementY
+                ctx.beginPath()
                 ctx.moveTo(lastX, lastY)
                 ctx.lineTo(x, y)
                 ctx.stroke()

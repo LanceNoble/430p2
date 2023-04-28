@@ -3,8 +3,8 @@ const { Account } = require('../models/Account.js');
 
 const getAccount = async (req, res) => {
   const doc = await Account.findOne(req.query).lean();
-  if (doc) res.status(200).json(doc);
-  res.status(404).json({ error: 'Account Not Found' });
+  if (doc) return res.status(200).json(doc);
+  return res.status(404).json({ error: 'Account Not Found' });
 };
 
 const postAccount = async (req, res) => {

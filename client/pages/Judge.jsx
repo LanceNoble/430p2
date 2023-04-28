@@ -16,6 +16,7 @@ export default function Judge({ setPage, roomName, socket }) {
             let activeCTX
             playerType === 'Drawer 1' ? activeCTX = drawer1CTX : activeCTX = drawer2CTX
             activeCTX.strokeStyle = strokeStyle
+            activeCTX.beginPath()
             activeCTX.moveTo(lastX, lastY)
             activeCTX.lineTo(x, y)
             activeCTX.stroke()

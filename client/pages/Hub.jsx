@@ -34,10 +34,8 @@ export default function Hub({ setPage, acc }) {
             <button onClick={() => setPage('acc')}>Account</button>
             <button onClick={() => setPage('board')}>Leaderboard</button>
             <button onClick={async (e) => {
-                e.preventDefault()
                 await fetch('/session', { method: 'DELETE' })
                 setPage('creds')
-                return false
             }}>Logout</button>
             <h2>Join Room</h2>
             <p>If the room doesn't exist, it will be created for you.</p>

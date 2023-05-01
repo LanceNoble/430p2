@@ -1,15 +1,6 @@
 const bcrypt = require('bcrypt');
 const { Account } = require('../models/Account.js');
 
-// Helper function for updating the session whenever an account updates
-function updateSession(sess, doc) {
-  const acc = {};
-  acc.user = doc.user;
-  acc.wins = doc.wins;
-  acc.premium = doc.premium;
-  Object.assign(sess.acc, acc);
-}
-
 // Retrieves a list of accounts from MongoDB based on query params
 const getAccount = async (req, res) => {
   const results = await Account.find(req.query).lean();
@@ -22,7 +13,11 @@ const postAccount = async (req, res) => {
   try {
     req.body.pass = await bcrypt.hash(req.body.pass, 10);
     const doc = await Account.create(req.body);
-    updateSession(req.session, doc);
+    req.session.acc = {
+      user: doc.user,
+      wins: doc.wins,
+      premium: doc.premium,
+    };
     res.status(201).json(req.session.acc);
   } catch (err) {
     res.status(400).json(err);
@@ -33,7 +28,11 @@ const postAccount = async (req, res) => {
 const putAccount = async (req, res) => {
   if (req.body.pass) req.body.pass = await bcrypt.hash(req.body.pass, 10);
   const doc = await Account.updateOne({ user: req.session.acc.user }, req.body);
-  updateSession(req.session, doc);
+  req.session.acc = {
+    user: doc.user,
+    wins: doc.wins,
+    premium: doc.premium,
+  };
   res.status(200).json(req.session.acc);
 };
 
@@ -43,7 +42,11 @@ const postSession = async (req, res) => {
   if (!doc) return res.status(401).json('Wrong Username');
   const match = await bcrypt.compare(req.body.pass, doc.pass);
   if (match) {
-    updateSession(req.session, doc);
+    req.session.acc = {
+      user: doc.user,
+      wins: doc.wins,
+      premium: doc.premium,
+    };
     return res.status(201).json(req.session.acc);
   }
   return res.status(401).json('Wrong Password');

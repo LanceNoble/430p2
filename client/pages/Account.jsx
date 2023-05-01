@@ -1,5 +1,5 @@
 const React = require('react')
-export default function Account({ setPage, setPremium, premiumRef }) {
+export default function Account({ setPage, acc }) {
     React.useEffect(() => {
         const winsCounter = document.querySelector("#wins")
     })
@@ -14,7 +14,8 @@ export default function Account({ setPage, setPremium, premiumRef }) {
                     body: JSON.stringify({ premium: true }),
                 })
                 if (res.status === 204) {
-                    premiumRef.current = 'yes'
+                    const resJSON = await res.json()
+                    acc.premium = resJSON.premium
                     alert('You are now premium!')
                 }
                 else alert('Failed to pay for premium!')
@@ -27,11 +28,11 @@ export default function Account({ setPage, setPremium, premiumRef }) {
                 if (pass !== newPassConfirm) alert('Passwords do not match!')
                 else {
                     const res = await fetch('/account', {
-                        method: 'PATCH',
+                        method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ pass }),
                     })
-                    res.status === 200 ? alert('Password changed!') : alert('Password change ERROR!')
+                    res.status === 204 ? alert('Password changed!') : alert('Password change ERROR!')
                 }
                 return false
             }}>

@@ -7,29 +7,26 @@ import Hub from './pages/Hub.jsx'
 import Account from './pages/Account.jsx'
 import Judge from './pages/Judge.jsx'
 import Draw from './pages/Draw.jsx'
+import Leaderboard from './pages/Leaderboard.jsx'
 
 const domNode = document.querySelector('#root')
 const root = createRoot(domNode)
 const socket = io()
+// data-acc attribute was JSON.stringified (look at app.get('/') handler in app.js)
+const acc = JSON.parse(domNode.dataset.acc)
+acc.socket = socket
 
-function Index({ init, premium }) {
-    const roomNameRef = React.useRef(null)
-    const playerTypeRef = React.useRef(null)
-    const premiumRef = React.useRef(premium)
+acc.user ? root.render(<Index init={'hub'} />) : root.render(<Index />)
 
+function Index({ init = 'creds' }) {
     const [page, setPage] = React.useState(init)
 
     switch (page) {
-        case 'creds': return (<Credentials setPage={setPage} premiumRef={premiumRef}/>)
-        case 'hub': return (<Hub setPage={setPage} roomNameRef={roomNameRef} playerTypeRef={playerTypeRef} socket={socket}/>)
-        case 'acc': return (<Account setPage={setPage} premiumRef={premiumRef}/>)
-        case 'judge': return (<Judge setPage={setPage} roomName={roomNameRef.current} socket={socket} />)
-        case 'draw': return (<Draw setPage={setPage} roomName={roomNameRef.current} playerType={playerTypeRef.current} socket={socket} premium={premiumRef.current}/>)
+        case 'creds': return (<Credentials setPage={setPage} acc={acc} />)
+        case 'hub': return (<Hub setPage={setPage} acc={acc} />)
+        case 'acc': return (<Account setPage={setPage} acc={acc} />)
+        case 'judge': return (<Judge setPage={setPage} acc={acc} />)
+        case 'draw': return (<Draw setPage={setPage} acc={acc} />)
+        case 'board': return (<Leaderboard setPage={setPage} />)
     }
-}
-
-window.onload = async () => {
-    const auth = domNode.getAttribute('data-auth')
-    const premium = domNode.getAttribute('data-premium')
-    auth ? root.render(<Index init={'hub'} premium={premium}/>) : root.render(<Index init={'creds'} premium={premium}/>)
 }

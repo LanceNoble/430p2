@@ -1,5 +1,5 @@
 const React = require('react')
-export default function Credentials({ setPage, premiumRef }) {
+export default function Credentials({ setPage, acc }) {
     return (
         <>
             <h1>Credentials Page</h1>
@@ -14,9 +14,10 @@ export default function Credentials({ setPage, premiumRef }) {
                     body: JSON.stringify({ user, pass }),
                 })
                 if (res.status === 201) {
-                    const body = await res.json()
-                    if (body['premium']) premiumRef.current = 'yes'
-                    else premiumRef.current = ''
+                    const resJSON = await res.json()
+                    acc.user = resJSON.user
+                    acc.wins = resJSON.wins
+                    acc.premium = resJSON.premium
                     setPage('hub')
                 }
                 else alert('Wrong username or password!')
@@ -38,7 +39,14 @@ export default function Credentials({ setPage, premiumRef }) {
                         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                         body: JSON.stringify({ user, pass }),
                     })
-                    res.status === 201 ? setPage('hub') : alert('Invalid username!')
+                    if (res.status === 201) {
+                        const resJSON = await res.json()
+                        acc.user = resJSON.user
+                        acc.wins = resJSON.wins
+                        acc.premium = resJSON.premium
+                        setPage('hub')
+                    }
+                    else alert('Invalid username!')
                 }
                 else alert('Passwords do not match!')
                 return false

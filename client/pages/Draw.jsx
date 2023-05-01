@@ -1,20 +1,18 @@
 const React = require('react')
 
-export default function Draw({ setPage, roomName, playerType, socket, premium }) {
+export default function Draw({ setPage, acc }) {
     React.useEffect(() => {
         const cvs = document.querySelector('canvas')
         const ctx = cvs.getContext('2d')
         ctx.strokeStyle = 'black'
         ctx.lineWidth = 5
         ctx.lineCap = 'round'
-        if (premium) {
+        if (acc.premium) {
             const div = document.querySelector('div')
             const changeColor = document.createElement('button')
             changeColor.innerHTML = `Change Color`
             div.appendChild(changeColor)
-            changeColor.onclick = () => {
-                ctx.strokeStyle = 'blue'
-            }
+            changeColor.onclick = () => ctx.strokeStyle == 'blue' ? ctx.strokeStyle = 'black' : ctx.strokeStyle = 'blue'
         }
         let drawing
         cvs.addEventListener('mousemove', (e) => {
@@ -28,21 +26,38 @@ export default function Draw({ setPage, roomName, playerType, socket, premium })
                 ctx.moveTo(lastX, lastY)
                 ctx.lineTo(x, y)
                 ctx.stroke()
-                socket.emit('draw', roomName, x, y, lastX, lastY, playerType, ctx.strokeStyle)
+                acc.socket.emit('draw', acc.room, x, y, lastX, lastY, acc.role, ctx.strokeStyle)
             }
         })
-        cvs.addEventListener('mousedown', (e) => drawing = true)
+        cvs.addEventListener('mousedown', () => drawing = true)
         cvs.addEventListener('mouseup', () => drawing = false)
         cvs.addEventListener('mouseleave', () => drawing = false)
+
+        const handleDrawEnd = async (winner) => {
+            alert(`${winner} wins!`)
+            if (acc.role === winner) {
+                await fetch('/account', {
+                    method: 'PUT',
+                    body: JSON.stringify({ wins: acc.wins + 1 })
+                })
+                acc.wins++
+            }
+            acc.socket.emit('room leave', acc.room)
+            setPage('hub')
+        }
+
+        acc.socket.on('end', handleDrawEnd)
+
+        return () => acc.socket.off('end', handleDrawEnd)
     })
     return (
         <>
-            <h1>You are {playerType} in Room '{roomName}'</h1>
+            <h1>You are {acc.role} in Room '{acc.room}'</h1>
             <canvas width='500' height='500'></canvas>
             <div></div>
             <button onClick={(e) => {
                 e.preventDefault()
-                socket.emit('room leave', roomName)
+                acc.socket.emit('room leave', acc.room)
                 setPage('hub')
                 return false
             }}>Leave</button>

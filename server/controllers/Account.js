@@ -1,63 +1,55 @@
 const bcrypt = require('bcrypt');
 const { Account } = require('../models/Account.js');
 
+// Helper function for updating the session whenever an account updates
+function updateSession(sess, doc) {
+  const acc = {};
+  acc.user = doc.user;
+  acc.wins = doc.wins;
+  acc.premium = doc.premium;
+  Object.assign(sess.acc, acc);
+}
+
+// Retrieves a list of accounts from MongoDB based on query params
 const getAccount = async (req, res) => {
-  const doc = await Account.findOne(req.query).lean();
-  if (doc) return res.status(200).json(doc);
-  return res.status(404).json({ error: 'Account Not Found' });
+  const results = await Account.find(req.query).lean();
+  if (results.length > 0) return res.status(200).json(results);
+  return res.status(404).json('Account Not Found');
 };
 
+// Creates a new account when a user signs up
 const postAccount = async (req, res) => {
   try {
     req.body.pass = await bcrypt.hash(req.body.pass, 10);
     const doc = await Account.create(req.body);
-    req.session.acc = {
-      user: req.body.user,
-      wins: 0,
-      premium: false,
-    };
-    res.status(201).json(doc);
+    updateSession(req.session, doc);
+    res.status(201).json(req.session.acc);
   } catch (err) {
     res.status(400).json(err);
   }
 };
 
+// Updates an existing account whenever a user wins, purchases premium, or changes password
 const putAccount = async (req, res) => {
-  const newInfo = {};
-  Object.keys(Account.schema.paths).forEach((key) => {
-    if (req.body[key]) newInfo[key] = req.body[key];
-  });
-  await Account.updateOne({ user: req.session.acc.user }, newInfo);
-  const accountKeys = Object.keys(req.session.acc);
-  for (let i = 0; i < accountKeys.length; i++) {
-    if (req.body[accountKeys[i]]) req.session.acc[accountKeys[i]] = req.body[accountKeys[i]];
-  }
-  res.status(204).end();
+  if (req.body.pass) req.body.pass = await bcrypt.hash(req.body.pass, 10);
+  const doc = await Account.updateOne({ user: req.session.acc.user }, req.body);
+  updateSession(req.session, doc);
+  res.status(200).json(req.session.acc);
 };
 
-const deleteAccount = async (req, res) => {
-  await Account.deleteOne({ user: req.session.acc.user });
-  req.session.destroy();
-  res.status(204).end();
-};
-
-const getSession = (req, res) => (req.session.acc ? res.status(200).json(req.session.acc) : res.status(404).json({ error: 'Session Expired' }));
-
+// Creates a new session when a user logs out
 const postSession = async (req, res) => {
   const doc = await Account.findOne({ user: req.body.user }).lean();
-  if (!doc) return res.status(401).json({ error: 'Wrong Credentials' });
+  if (!doc) return res.status(401).json('Wrong Username');
   const match = await bcrypt.compare(req.body.pass, doc.pass);
   if (match) {
-    req.session.acc = {
-      user: doc.user,
-      wins: doc.wins,
-      premium: doc.premium,
-    };
+    updateSession(req.session, doc);
     return res.status(201).json(req.session.acc);
   }
-  return res.status(401).json({ error: 'Wrong Credentials' });
+  return res.status(401).json('Wrong Password');
 };
 
+// Deletes the current session when the user logs out
 const deleteSession = (req, res) => {
   req.session.destroy();
   res.status(204).end();
@@ -67,9 +59,7 @@ module.exports = {
   getAccount,
   postAccount,
   putAccount,
-  deleteAccount,
 
-  getSession,
   postSession,
   deleteSession,
 };

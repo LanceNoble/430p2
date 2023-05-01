@@ -13,18 +13,6 @@ const favicon = require('serve-favicon');
 const helmet = require('helmet');
 const session = require('express-session');
 
-const auth = (req, res, next) => {
-  if (req.session.acc) {
-    req.session.auth = 'yes';
-    if (req.session.acc.premium) req.session.premium = 'yes';
-    else req.session.premium = '';
-  } else {
-    req.session.auth = '';
-    req.session.premium = '';
-  }
-  next();
-};
-
 const http = require('http');
 const { Server } = require('socket.io');
 
@@ -58,63 +46,122 @@ redisClient.connect().then(() => {
   app.set('view engine', 'handlebars');
   app.set('views', `${__dirname}/views`);
 
-  app.get('/session', accountController.getSession);
   app.post('/session', accountController.postSession);
   app.delete('/session', accountController.deleteSession);
 
   app.get('/account', accountController.getAccount);
   app.post('/account', accountController.postAccount);
   app.put('/account', accountController.putAccount);
-  app.delete('/account', accountController.deleteAccount);
 
-  app.get('/', auth, (req, res) => res.render('index', { auth: req.session.auth, premium: req.session.premium }));
+  // pass session as handlebars expression
+  // to access its properties in react components without HTTP request
+  // middleware ensures that req.session.acc equals to an empty object instead of undefined
+  // or else JSON.stringify will return undefined
+  // passing undefined values to html data attributes is bad
+  // also we JSON.stringify the session object because html data attributes only accept strings
+  app.get('/', (req, res, next) => {
+    if (!req.session.acc) req.session.acc = {};
+    next();
+  }, (req, res) => res.status(200).render('index', { acc: JSON.stringify(req.session.acc) }));
+
   app.get('/*', (req, res) => res.status(404).render('notFound'));
 
   const server = http.createServer(app);
   const io = new Server(server);
 
   io.on('connection', (socket) => {
-    socket.on('room join', async (roomName, playerType) => {
-      socket.join(roomName);
-      if (roomName === 'hub') return;
-      const sockets = await io.in(roomName).fetchSockets();
-      for (let i = 0; i < sockets.length; i++) {
-        if (playerType === sockets[i].data.playerType) {
-          socket.leave(roomName);
-          io.to(socket.id).emit('room join error', `The "${playerType}" role has already been taken in room "${roomName}"!`);
-          return;
-        }
-      }
-      // Object.assign avoids airbnb eslint no-param-reassign
+    // Avoids airbnb eslint no-param-reassign
+    // Creates a temporary object that can be operated on
+    // And assigns the object to the socket's data property
+    const editSocketRole = (role) => {
       const shallowSocketData = socket.data;
-      shallowSocketData.playerType = playerType;
+      shallowSocketData.role = role;
       Object.assign(socket.data, shallowSocketData);
-      io.to(socket.id).emit('room join success');
+    };
+
+    socket.on('room join', (room, role) => {
+      const roomRef = io.of('/').adapter.rooms.get(room);
+      // If room doesn't exist, join right away
+      if (!roomRef) {
+        socket.join(room);
+        editSocketRole(role);
+        io.to(socket.id).emit('wait');
+        return;
+      }
+
+      // If room exists, check to see if the role (Judge, Drawer 1, Drawer 2) was taken
+      roomRef.forEach((sid) => {
+        if (role === io.sockets.sockets.get(sid).data.role) {
+          io.to(socket.id).emit('spot taken');
+        }
+      });
+      socket.join(room);
+      editSocketRole(role);
+
+      // If room is full (has a Judge, Drawer 1, and Drawer 2) start game
+      // Otherwise, have the users wait
+      if (roomRef.size === 3) io.to(room).emit('start');
+      else io.to(socket.id).emit('wait');
     });
 
-    socket.on('room leave', (roomName) => {
-      const shallowSocketData = socket.data;
-      shallowSocketData.playerType = null;
-      Object.assign(socket.data, shallowSocketData);
-      socket.leave(roomName);
+    socket.on('room leave', (room, winner) => {
+      editSocketRole(null);
+      socket.leave(room);
+      if (winner) io.to(room).emit('end', winner);
     });
 
     socket.on('rooms request', () => {
       const rooms = [];
-      io.of('/').adapter.rooms.forEach((sids, roomName) => {
-        if (roomName !== 'hub' && !sids.has(roomName)) {
-          let drawerCount = 0;
+      io.of('/').adapter.rooms.forEach((sids, room) => {
+        // Upon connection, all sockets automatically join a room associated with their socket id
+        // If current room matches a socket id, don't include it in the room list
+        if (!sids.has(room)) {
+          let drawer1Count = 0;
+          let drawer2Count = 0;
           let judgeCount = 0;
-          sids.forEach((sid) => (io.sockets.sockets.get(sid).data.playerType === 'Judge' ? judgeCount++ : drawerCount++));
+          sids.forEach((sid) => {
+            switch (io.sockets.sockets.get(sid).data.role) {
+              case 'Drawer 1':
+                drawer1Count++;
+                break;
+              case 'Drawer 2':
+                drawer2Count++;
+                break;
+              default:
+                judgeCount++;
+                break;
+            }
+          });
           rooms.push({
-            roomName, drawerCount, judgeCount,
+            room, drawer1Count, drawer2Count, judgeCount,
           });
         }
       });
+
+      // Only send the rooms to the socket that requested it
+      // Otherwise, room list renderings on the hub page will be duplicated across all clients
       io.to(socket.id).emit('rooms sent', rooms);
     });
 
     socket.on('draw', (roomName, x, y, lastX, lastY, playerType, strokeStyle) => io.to(roomName).emit('draw', x, y, lastX, lastY, playerType, strokeStyle));
+  });
+
+  // Handles users that leave in the middle of a match
+  io.of('/').adapter.on('leave-room', (room, id) => {
+    const { role } = io.sockets.sockets.get(id).data;
+    switch (role) {
+      case 'Drawer 1':
+        io.to(room).emit('end', 'Drawer 2');
+        break;
+      case 'Drawer 2':
+        io.to(room).emit('end', 'Drawer 1');
+        break;
+      case 'Judge':
+        io.to(room).emit('end', 'No one');
+        break;
+      default:
+        break;
+    }
   });
 
   server.listen(process.env.PORT || 3000, (err) => {

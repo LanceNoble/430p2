@@ -1,6 +1,6 @@
 const React = require('react')
 
-export default function Judge({ setPage, roomName, socket }) {
+export default function Judge({ setPage, acc }) {
     React.useEffect(() => {
         const drawer1CVS = document.querySelector('#drawer1')
         const drawer1CTX = drawer1CVS.getContext('2d')
@@ -12,7 +12,7 @@ export default function Judge({ setPage, roomName, socket }) {
         drawer2CTX.lineWidth = 5
         drawer2CTX.lineCap = 'round'
 
-        socket.on('draw', (x, y, lastX, lastY, playerType, strokeStyle) => {
+        acc.socket.on('draw', (x, y, lastX, lastY, playerType, strokeStyle) => {
             let activeCTX
             playerType === 'Drawer 1' ? activeCTX = drawer1CTX : activeCTX = drawer2CTX
             activeCTX.strokeStyle = strokeStyle
@@ -21,27 +21,40 @@ export default function Judge({ setPage, roomName, socket }) {
             activeCTX.lineTo(x, y)
             activeCTX.stroke()
         })
+
+        const handleJudgeEnd = async (winner) => {
+            alert(`${winner} wins!`)
+            acc.socket.emit('room leave', acc.room)
+            setPage('hub')
+        }
+
+        acc.socket.on('end', handleJudgeEnd)
+
+        return () => {
+            acc.socket.off('draw')
+            acc.socket.off('end', handleJudgeEnd)
+        }
     })
     return (
         <>
-            <h1>You are a Judge in Room '{roomName}'</h1>
+            <h1>You are a Judge in Room '{acc.room}'</h1>
             <canvas id='drawer1' width='500' height='500'></canvas>
-            <button id="voteDrawer1" onClick={async (e) => {
-                await fetch('/account', {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ winIncrement: 1 }),
-                })
-            }}>Vote Drawer 1</button>
             <canvas id='drawer2' width='500' height='500'></canvas>
-            <button id="voteDrawer2" onClick={async (e) => {
-
-            }}>Vote Drawer 2</button>
-            <button onClick={async (e) => {
+            <h2>Vote Who Wins!</h2>
+            <form onSubmit={(e) => {
                 e.preventDefault()
-                socket.emit('room leave', roomName)
-                setPage('hub')
+                acc.socket.emit('room leave', acc.room, e.target.querySelector('select').value)
                 return false
+            }}>
+                <select>
+                    <option value='Drawer 1' selected='selected'>Drawer 1</option>
+                    <option value='Drawer 2'>Drawer 2</option>
+                </select>
+                <input type='submit' value='Vote' />
+            </form>
+            <button onClick={() => {
+                acc.socket.emit('room leave', acc.room)
+                setPage('hub')
             }} type='button'>Leave</button>
         </>
     )

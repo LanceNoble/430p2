@@ -20,7 +20,6 @@ acc.user ? root.render(<Index init={'hub'} />) : root.render(<Index />)
 
 function Index({ init = 'creds' }) {
     const [page, setPage] = React.useState(init)
-    console.log(acc)
     switch (page) {
         case 'creds': return (<Credentials setPage={setPage} acc={acc} />)
         case 'hub': return (<Hub setPage={setPage} acc={acc} />)

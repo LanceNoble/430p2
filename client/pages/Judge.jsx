@@ -53,8 +53,7 @@ export default function Judge({ setPage, acc }) {
                 <input type='submit' value='Vote' />
             </form>
             <button onClick={() => {
-                acc.socket.emit('room leave', acc.room)
-                setPage('hub')
+                acc.socket.emit('end', acc.room, 'No one')
             }} type='button'>Leave</button>
         </>
     )

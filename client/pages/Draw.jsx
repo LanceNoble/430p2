@@ -1,19 +1,14 @@
 const React = require('react')
 
 export default function Draw({ setPage, acc }) {
+    const ctxRef = React.useRef(null)
     React.useEffect(() => {
         const cvs = document.querySelector('canvas')
         const ctx = cvs.getContext('2d')
+        ctxRef.current = ctx
         ctx.strokeStyle = 'black'
         ctx.lineWidth = 5
         ctx.lineCap = 'round'
-        if (acc.premium) {
-            const div = document.querySelector('div')
-            const changeColor = document.createElement('button')
-            changeColor.innerHTML = `Change Color`
-            div.appendChild(changeColor)
-            changeColor.onClick = () => ctx.strokeStyle == 'blue' ? ctx.strokeStyle = 'black' : ctx.strokeStyle = 'blue'
-        }
         let drawing
         cvs.addEventListener('mousemove', (e) => {
             if (drawing) {
@@ -55,11 +50,11 @@ export default function Draw({ setPage, acc }) {
         <>
             <h1>You are {acc.role} in Room '{acc.room}'</h1>
             <canvas width='500' height='500'></canvas>
-            <div></div>
+            <button hidden={!acc.premium} onClick={() => ctxRef.current.strokeStyle = 'black'}>Draw in Black</button>
+            <button hidden={!acc.premium} onClick={() => ctxRef.current.strokeStyle = 'blue'}>Draw in Blue</button>
             <button onClick={(e) => {
                 e.preventDefault()
-                acc.socket.emit('room leave', acc.room)
-                setPage('hub')
+                acc.socket.emit('end', acc.room, 'No one')
                 return false
             }}>Leave</button>
         </>

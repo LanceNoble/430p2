@@ -15,6 +15,7 @@ const socket = io()
 // data-acc attribute was JSON.stringified (look at app.get('/') handler in app.js)
 const acc = JSON.parse(domNode.dataset.acc)
 acc.socket = socket
+console.log(acc)
 
 acc.user ? root.render(<Index init={'hub'} />) : root.render(<Index />)
 

@@ -25,6 +25,7 @@ export default function Account({ setPage, acc }) {
                 <div class='hero-body'>
                     <h2 class='title'>User: {acc.user}</h2>
                     <p class='subtitle'>You have {acc.wins} wins</p>
+                    <p class='subtitle'>Premium: {`${acc.premium}`}</p>
                 </div>
             </section>
             <section class='hero is-small is-warning'>

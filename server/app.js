@@ -83,20 +83,23 @@ redisClient.connect().then(() => {
       const roomRef = io.of('/').adapter.rooms.get(room);
       // If room doesn't exist, join right away
       if (!roomRef) {
-        socket.join(room);
         editSocketRole(role);
+        socket.join(room);
         io.to(socket.id).emit('wait');
         return;
       }
 
+      let taken = false;
       // If room exists, check to see if the role (Judge, Drawer 1, Drawer 2) was taken
       roomRef.forEach((sid) => {
-        if (role === io.sockets.sockets.get(sid).data.role) {
-          io.to(socket.id).emit('spot taken');
-        }
+        if (role === io.sockets.sockets.get(sid).data.role) taken = true;
       });
-      socket.join(room);
+      if (taken) {
+        io.to(socket.id).emit('spot taken');
+        return;
+      }
       editSocketRole(role);
+      socket.join(room);
 
       // If room is full (has a Judge, Drawer 1, and Drawer 2) start game
       // Otherwise, have the users wait
@@ -104,10 +107,13 @@ redisClient.connect().then(() => {
       else io.to(socket.id).emit('wait');
     });
 
-    socket.on('room leave', (room, winner) => {
+    socket.on('room leave', (room) => {
       editSocketRole(null);
       socket.leave(room);
-      if (winner) io.to(room).emit('end', winner);
+    });
+
+    socket.on('end', (room, winner) => {
+      io.to(room).emit('end', winner);
     });
 
     socket.on('rooms request', () => {
@@ -148,20 +154,7 @@ redisClient.connect().then(() => {
 
   // Handles users that leave in the middle of a match
   io.of('/').adapter.on('leave-room', (room, id) => {
-    const { role } = io.sockets.sockets.get(id).data;
-    switch (role) {
-      case 'Drawer 1':
-        io.to(room).emit('end', 'Drawer 2');
-        break;
-      case 'Drawer 2':
-        io.to(room).emit('end', 'Drawer 1');
-        break;
-      case 'Judge':
-        io.to(room).emit('end', 'No one');
-        break;
-      default:
-        break;
-    }
+    if (io.sockets.sockets.get(id).data.role) io.to(room).emit('end', 'No one');
   });
 
   server.listen(process.env.PORT || 3000, (err) => {

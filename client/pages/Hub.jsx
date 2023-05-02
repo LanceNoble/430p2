@@ -14,10 +14,7 @@ export default function Hub({ setPage, acc }) {
                 roomList.appendChild(li)
             }
         })
-        acc.socket.on('spot taken', () => {
-            alert(`The role you chose is already taken`)
-            setIsInRoom(false)
-        })
+        acc.socket.on('spot taken', () => alert(`The role you chose is already taken`))
         acc.socket.on('wait', () => setIsInRoom(true))
         acc.socket.on('start', () => acc.role === 'Judge' ? setPage('judge') : setPage('draw'))
 
@@ -33,7 +30,7 @@ export default function Hub({ setPage, acc }) {
             <h1>Hub Page</h1>
             <button onClick={() => setPage('acc')}>Account</button>
             <button onClick={() => setPage('board')}>Leaderboard</button>
-            <button onClick={async (e) => {
+            <button onClick={async () => {
                 await fetch('/session', { method: 'DELETE' })
                 setPage('creds')
             }}>Logout</button>
@@ -44,7 +41,6 @@ export default function Hub({ setPage, acc }) {
                 acc.room = e.target.querySelector('input[type="text"]').value
                 acc.role = e.target.querySelector('select').value
                 acc.socket.emit('room join', acc.room, acc.role)
-                return false
             }}>
                 <input type='text' placeholder='Room Name' required></input>
                 <select>

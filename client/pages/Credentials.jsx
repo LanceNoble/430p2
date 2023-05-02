@@ -21,7 +21,6 @@ export default function Credentials({ setPage, acc }) {
                     setPage('hub')
                 }
                 else alert('Wrong username or password!')
-                return false
             }}>
                 <input type='text' placeholder='Username' required />
                 <input type='password' placeholder='Password' required />
@@ -49,7 +48,6 @@ export default function Credentials({ setPage, acc }) {
                     else alert('Invalid username!')
                 }
                 else alert('Passwords do not match!')
-                return false
             }}>
                 <input type='text' placeholder='Username' required />
                 <input id='pass' type='password' placeholder='Password' required />

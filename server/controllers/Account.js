@@ -27,7 +27,8 @@ const postAccount = async (req, res) => {
 // Updates an existing account whenever a user wins, purchases premium, or changes password
 const putAccount = async (req, res) => {
   if (req.body.pass) req.body.pass = await bcrypt.hash(req.body.pass, 10);
-  const doc = await Account.updateOne({ user: req.session.acc.user }, req.body);
+  await Account.updateOne({ user: req.session.acc.user }, req.body);
+  const doc = await Account.findOne({ user: req.session.acc.user }).lean();
   req.session.acc = {
     user: doc.user,
     wins: doc.wins,

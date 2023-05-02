@@ -12,7 +12,7 @@ export default function Draw({ setPage, acc }) {
             const changeColor = document.createElement('button')
             changeColor.innerHTML = `Change Color`
             div.appendChild(changeColor)
-            changeColor.onclick = () => ctx.strokeStyle == 'blue' ? ctx.strokeStyle = 'black' : ctx.strokeStyle = 'blue'
+            changeColor.onClick = () => ctx.strokeStyle == 'blue' ? ctx.strokeStyle = 'black' : ctx.strokeStyle = 'blue'
         }
         let drawing
         cvs.addEventListener('mousemove', (e) => {
@@ -35,12 +35,13 @@ export default function Draw({ setPage, acc }) {
 
         const handleDrawEnd = async (winner) => {
             alert(`${winner} wins!`)
-            if (acc.role === winner) {
+            if (acc.role == winner) {
+                acc.wins++
                 await fetch('/account', {
                     method: 'PUT',
-                    body: JSON.stringify({ wins: acc.wins + 1 })
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ wins: acc.wins })
                 })
-                acc.wins++
             }
             acc.socket.emit('room leave', acc.room)
             setPage('hub')

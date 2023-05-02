@@ -43,8 +43,8 @@ export default function Judge({ setPage, acc }) {
             <h2>Vote Who Wins!</h2>
             <form onSubmit={(e) => {
                 e.preventDefault()
-                acc.socket.emit('room leave', acc.room, e.target.querySelector('select').value)
-                return false
+                const winner = e.target.querySelector('select').value
+                acc.socket.emit('end', acc.room, winner)
             }}>
                 <select>
                     <option value='Drawer 1' selected='selected'>Drawer 1</option>

@@ -36,25 +36,37 @@ export default function Judge({ setPage, acc }) {
         }
     })
     return (
-        <>
-            <h1>You are a Judge in Room '{acc.room}'</h1>
-            <canvas id='drawer1' width='500' height='500'></canvas>
-            <canvas id='drawer2' width='500' height='500'></canvas>
-            <h2>Vote Who Wins!</h2>
-            <form onSubmit={(e) => {
-                e.preventDefault()
-                const winner = e.target.querySelector('select').value
-                acc.socket.emit('end', acc.room, winner)
-            }}>
-                <select>
-                    <option value='Drawer 1' selected='selected'>Drawer 1</option>
-                    <option value='Drawer 2'>Drawer 2</option>
-                </select>
-                <input type='submit' value='Vote' />
-            </form>
-            <button onClick={() => {
-                acc.socket.emit('end', acc.room, 'No one')
-            }} type='button'>Leave</button>
-        </>
+        <div class='content'>
+            <section class='hero is-small is-primary'>
+                <div class='hero-body container'>
+                    <h1 class='title'>You are the Judge in Room '{acc.room}'</h1>
+                    <h2 class='subtitle'>Drawer 1</h2>
+                    <canvas class='has-background-white' id='drawer1' width='500' height='500'></canvas>
+                    <h2 class='subtitle'>Drawer 2</h2>
+                    <canvas class='has-background-white ml-1' id='drawer2' width='500' height='500'></canvas>
+                    <button class='button is-block' onClick={() => {
+                        acc.socket.emit('end', acc.room, 'No one')
+                    }} type='button'>Leave</button>
+                </div>
+            </section>
+            <section class='hero is-small is-info'>
+                <div class='hero-body'>
+                    <h2 class='title'>Vote Who Wins!</h2>
+                    <form onSubmit={(e) => {
+                        e.preventDefault()
+                        const winner = e.target.querySelector('select').value
+                        acc.socket.emit('end', acc.room, winner)
+                    }}>
+                        <div class='select'>
+                            <select class='is-inline'>
+                                <option value='Drawer 1' selected='selected'>Drawer 1</option>
+                                <option value='Drawer 2'>Drawer 2</option>
+                            </select>
+                        </div>
+                        <input class='input is-inline' type='submit' value='Vote' />
+                    </form>
+                </div>
+            </section>
+        </div>
     )
 }

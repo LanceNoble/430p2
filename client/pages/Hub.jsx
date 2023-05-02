@@ -26,42 +26,56 @@ export default function Hub({ setPage, acc }) {
         }
     })
     return (
-        <>
-            <h1>Hub Page</h1>
-            <button onClick={() => setPage('acc')}>Account</button>
-            <button onClick={() => setPage('board')}>Leaderboard</button>
-            <button onClick={async () => {
-                await fetch('/session', { method: 'DELETE' })
-                setPage('creds')
-            }}>Logout</button>
-            <h2>Join Room</h2>
-            <p>If the room doesn't exist, it will be created for you.</p>
-            <form hidden={isInRoom} onSubmit={(e) => {
-                e.preventDefault()
-                acc.room = e.target.querySelector('input[type="text"]').value
-                acc.role = e.target.querySelector('select').value
-                acc.socket.emit('room join', acc.room, acc.role)
-            }}>
-                <input type='text' placeholder='Room Name' required></input>
-                <select>
-                    <option value='Drawer 1' selected='selected'>Drawer 1</option>
-                    <option value='Drawer 2'>Drawer 2</option>
-                    <option value='Judge'>Judge</option>
-                </select>
-                <input type='submit' value='Join Room'></input>
-            </form>
-            <section hidden={!isInRoom}>
-                You are now in room {acc.room} <br />
-                Waiting for other players before starting...
-                <button onClick={() => {
-                    acc.socket.emit('room leave', acc.room)
-                    setIsInRoom(false)
-                }}>Leave room</button>
+        <div class='content'>
+            <section class='hero is-small is-primary'>
+                <div class='hero-body'>
+                    <h1 class='title'>Hub</h1>
+                    <button class='button' onClick={() => setPage('acc')}>Account</button>
+                    <button class='button' onClick={() => setPage('board')}>Leaderboard</button>
+                    <button class='button' onClick={async () => {
+                        await fetch('/session', { method: 'DELETE' })
+                        setPage('creds')
+                    }}>Logout</button>
+                </div>
             </section>
-            <h2>Rooms</h2>
-            <ul>
+            <section class='hero is-small is-success'>
+                <div class='hero-body'>
+                    <h2 class='title'>Join</h2>
+                    <p class='subtitle'>If the room doesn't exist, it will be created for you.</p>
+                    <form hidden={isInRoom} onSubmit={(e) => {
+                        e.preventDefault()
+                        acc.room = e.target.querySelector('input[type="text"]').value
+                        acc.role = e.target.querySelector('select').value
+                        acc.socket.emit('room join', acc.room, acc.role)
+                    }}>
+                        <div class='select'>
+                            <select class='is-inline'>
+                                <option value='Drawer 1' selected='selected'>Drawer 1</option>
+                                <option value='Drawer 2'>Drawer 2</option>
+                                <option value='Judge'>Judge</option>
+                            </select>
+                        </div>
+                        <input class='input is-inline' type='text' placeholder='Room Name' required></input>
+                        <input class='input is-inline' type='submit' value='Join Room'></input>
+                    </form>
+                    <div class='notification is-info' hidden={!isInRoom}>
+                        You joined room "{acc.room}"<br />
+                        Waiting for other players before starting... <br />
+                        <button class='button' onClick={() => {
+                            acc.socket.emit('room leave', acc.room)
+                            setIsInRoom(false)
+                        }}>Leave</button>
+                    </div>
+                </div>
+            </section>
+            <section class='hero is-small is-link'>
+                <div class='hero-body'>
+                    <h2 class='title'>Rooms</h2>
+                    <ul>
 
-            </ul>
-        </>
+                    </ul>
+                </div>
+            </section>
+        </div>
     )
 }

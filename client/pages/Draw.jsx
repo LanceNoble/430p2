@@ -47,16 +47,20 @@ export default function Draw({ setPage, acc }) {
         return () => acc.socket.off('end', handleDrawEnd)
     })
     return (
-        <>
-            <h1>You are {acc.role} in Room '{acc.room}'</h1>
-            <canvas width='500' height='500'></canvas>
-            <button hidden={!acc.premium} onClick={() => ctxRef.current.strokeStyle = 'black'}>Draw in Black</button>
-            <button hidden={!acc.premium} onClick={() => ctxRef.current.strokeStyle = 'blue'}>Draw in Blue</button>
-            <button onClick={(e) => {
-                e.preventDefault()
-                acc.socket.emit('end', acc.room, 'No one')
-                return false
-            }}>Leave</button>
-        </>
+        <div class='content'>
+            <section class='hero is-small is-primary'>
+                <div class='hero-body container'>
+                    <h1 class='title'>You are {acc.role} in Room '{acc.room}'</h1>
+                    <canvas class='has-background-white' width='500' height='500'></canvas>
+                    <button class='button is-inline-block' hidden={acc.premium} onClick={() => ctxRef.current.strokeStyle = 'black'}>Draw in Black</button>
+                    <button class='button is-inline-block' hidden={acc.premium} onClick={() => ctxRef.current.strokeStyle = 'blue'}>Draw in Blue</button>
+                    <button class='button is-block' onClick={(e) => {
+                        e.preventDefault()
+                        acc.socket.emit('end', acc.room, 'No one')
+                        return false
+                    }}>Leave</button>
+                </div>
+            </section>
+        </div>
     )
 }

@@ -2,6 +2,7 @@ const React = require('react')
 export default function Leaderboard({ setPage }) {
     React.useEffect(() => {
         const list = document.querySelector('ol')
+        // Have to use then because React.useEffect doesn't like async/await
         fetch('/account', {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
@@ -27,18 +28,22 @@ export default function Leaderboard({ setPage }) {
             }
             for (let i = 0; i < resJSON.length; i++) {
                 const li = document.createElement('li')
-                li.innerHTML = `${resJSON[i].user} - ${resJSON[i].wins} wins`
+                li.innerHTML = `${resJSON[i].user}: ${resJSON[i].wins} wins`
                 list.appendChild(li)
             }
         })
     })
     return (
-        <>
-            <h1>Leaderboard</h1>
-            <button onClick={() => setPage('hub')}>Hub</button>
-            <ol>
+        <div class='content'>
+            <section class='hero is-medium is-info'>
+                <div class='hero-body'>
+                    <h1 class='title'>Leaderboard</h1>
+                    <button class='button' onClick={() => setPage('hub')}>Hub</button>
+                    <ol>
 
-            </ol>
-        </>
+                    </ol>
+                </div>
+            </section>
+        </div>
     )
 }

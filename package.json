@@ -1,6 +1,10 @@
 {
   "name": "drawduels",
   "version": "1.0.0",
+  "engines": {
+    "node": "16.20.1",
+    "npm": "8.19.4"
+  },
   "description": "a web game where players compete over who can make the better drawing",
   "main": "./server/app.js",
   "scripts": {
